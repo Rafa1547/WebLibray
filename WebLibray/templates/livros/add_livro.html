@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Adicionar Livro - Biblioteca{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Adicionar Novo Livro</h1>
+        <p class="page-subtitle">Adicione um novo livro ao catálogo da biblioteca</p>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('livros.add_livro') }}" enctype="multipart/form-data" id="bookForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Título</label>
+                                    <input type="text" 
+                                           name="titulo" 
+                                           class="form-control" 
+                                           placeholder="Digite o título do livro"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Por favor, insira o título do livro.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Autor</label>
+                                    <input type="text" 
+                                           name="autor" 
+                                           class="form-control" 
+                                           placeholder="Digite o nome do autor"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Por favor, insira o autor do livro.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Categoria</label>
+                                    <select name="categoria" class="form-control form-select" required>
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="Ficção">Ficção</option>
+                                        <option value="Romance">Romance</option>
+                                        <option value="Mistério">Mistério</option>
+                                        <option value="Fantasia">Fantasia</option>
+                                        <option value="Ficção Científica">Ficção Científica</option>
+                                        <option value="Terror">Terror</option>
+                                        <option value="História">História</option>
+                                        <option value="Geografia">Geografia</option>
+                                        <option value="Biografia">Biografia</option>
+                                        <option value="Ciência">Ciência</option>
+                                        <option value="Tecnologia">Tecnologia</option>
+                                        <option value="Filosofia">Filosofia</option>
+                                        <option value="Psicologia">Psicologia</option>
+                                        <option value="Educação">Educação</option>
+                                        <option value="Negócios">Negócios</option>
+                                        <option value="Saúde">Saúde</option>
+                                        <option value="Culinária">Culinária</option>
+                                        <option value="Arte">Arte</option>
+                                        <option value="Música">Música</option>
+                                        <option value="Desporto">Desporto</option>
+                                        <option value="Viagem">Viagem</option>
+                                        <option value="Infantil">Infantil</option>
+                                        <option value="Jovem Adulto">Jovem Adulto</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Por favor, selecione uma categoria.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">ISBN</label>
+                                    <input type="text" 
+                                           name="isbn" 
+                                           class="form-control" 
+                                           placeholder="Digite o ISBN (opcional)"
+                                           pattern="[0-9\-]{10,17}"
+                                           title="ISBN deve conter apenas números e hífens">
+                                    <div class="invalid-feedback">
+                                        ISBN deve conter apenas números e hífens.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Descrição</label>
+                            <textarea name="descricao" 
+                                      class="form-control" 
+                                      rows="4" 
+                                      placeholder="Digite uma breve descrição do livro (opcional)"></textarea>
+                            <small class="form-text text-muted">
+                                Máximo de 500 caracteres. <span id="char-count">0/500</span>
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Capa do Livro</label>
+                            <div class="custom-file-upload">
+                                <input type="file" 
+                                       name="capa" 
+                                       id="capa" 
+                                       class="form-control-file" 
+                                       accept="image/*">
+                                <label for="capa" class="file-upload-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span class="file-upload-text">Clique para fazer upload da capa</span>
+                                </label>
+                                <div class="file-info">
+                                    <small class="text-muted">
+                                        Formatos aceites: JPG, PNG, GIF (máximo 5MB)
+                                    </small>
+                                </div>
+                            </div>
+                            <div id="image-preview" class="image-preview"></div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Ano de Publicação</label>
+                                    <input type="number" 
+                                           name="ano_publicacao" 
+                                           class="form-control" 
+                                           placeholder="Ex: 2023"
+                                           min="1000" 
+                                           max="{{ current_year }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Editora</label>
+                                    <input type="text" 
+                                           name="editora" 
+                                           class="form-control" 
+                                           placeholder="Digite o nome da editora (opcional)">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Número de Páginas</label>
+                                    <input type="number" 
+                                           name="paginas" 
+                                           class="form-control" 
+                                           placeholder="Ex: 250"
+                                           min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Idioma</label>
+                                    <select name="idioma" class="form-control form-select">
+                                        <option value="">Selecione o idioma</option>
+                                        <option value="Português">Português</option>
+                                        <option value="Inglês">Inglês</option>
+                                        <option value="Espanhol">Espanhol</option>
+                                        <option value="Francês">Francês</option>
+                                        <option value="Alemão">Alemão</option>
+                                        <option value="Italiano">Italiano</option>
+                                        <option value="Japonês">Japonês</option>
+                                        <option value="Chinês">Chinês</option>
+                                        <option value="Russo">Russo</option>
+                                        <option value="Árabe">Árabe</option>
+                                        <option value="Outro">Outro</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="custom-checkbox">
+                                <input type="checkbox" id="disponivel" name="disponivel" checked>
+                                <label for="disponivel">
+                                    <i class="fas fa-check"></i>
+                                    Marcar como disponível
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Livros marcados como disponíveis podem ser emprestados imediatamente.
+                            </small>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Adicionar Livro
+                            </button>
+                            <a href="{{ url_for('livros.ver_livros') }}" class="btn btn-outline">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.custom-file-upload {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.custom-file-upload input[type="file"] {
+    position: absolute;
+    left: -9999px;
+}
+
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border: 2px dashed #dee2e6;
+    border-radius: var(--border-radius);
+    background: var(--light-gray);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    margin: 0;
+}
+
+.file-upload-label:hover {
+    border-color: var(--primary-color);
+    background: rgba(62, 142, 222, 0.05);
+}
+
+.file-upload-label i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.file-upload-text {
+    color: var(--accent-1);
+    font-weight: 500;
+}
+
+.file-info {
+    margin-top: 0.5rem;
+}
+
+.image-preview {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 200px;
+    max-height: 300px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.custom-checkbox input {
+    margin-right: 0.75rem;
+    transform: scale(1.2);
+}
+
+.custom-checkbox label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.custom-checkbox label i {
+    margin-right: 0.5rem;
+    color: var(--success-color);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.was-validated .form-control:invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.was-validated .form-control:valid {
+    border-color: #28a745;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.6-.6c.18-.18.38-.29.6-.29.22 0 .42.11.6.29l1.05 1.05-1.05 1.05c-.18.18-.38.29-.6.29s-.42-.11-.6-.29l-.6-.6c-.12-.12-.12-.32 0-.44z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+#char-count {
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('bookForm');
+    const fileInput = document.getElementById('capa');
+    const imagePreview = document.getElementById('image-preview');
+    const fileUploadText = document.querySelector('.file-upload-text');
+    const descricaoTextarea = document.querySelector('textarea[name="descricao"]');
+    const charCount = document.getElementById('char-count');
+    
+    // File upload handling
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Check file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('O arquivo é muito grande. O tamanho máximo é 5MB.');
+                fileInput.value = '';
+                return;
+            }
+            
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecione apenas arquivos de imagem.');
+                fileInput.value = '';
+                return;
+            }
+            
+            // Update label text
+            fileUploadText.textContent = file.name;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.innerHTML = `
+                    <div>
+                        <img src="${e.target.result}" alt="Preview da capa">
+                        <p class="mt-2 text-muted">Preview da capa</p>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            fileUploadText.textContent = 'Clique para fazer upload da capa';
+            imagePreview.innerHTML = '';
+        }
+    });
+    
+    // Character count for description
+    if (descricaoTextarea && charCount) {
+        descricaoTextarea.addEventListener('input', function() {
+            const current = this.value.length;
+            const max = 500;
+            charCount.textContent = `${current}/${max}`;
+            
+            if (current > max) {
+                charCount.style.color = '#dc3545';
+                this.value = this.value.substring(0, max);
+                charCount.textContent = `${max}/${max}`;
+            } else {
+                charCount.style.color = '';
+            }
+        });
+    }
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // ISBN formatting
+    const isbnInput = document.querySelector('input[name="isbn"]');
+    if (isbnInput) {
+        isbnInput.addEventListener('input', function() {
+            // Remove all non-numeric and non-hyphen characters
+            this.value = this.value.replace(/[^0-9\-]/g, '');
+        });
+    }
+    
+    // Auto-generate title suggestions (mock functionality)
+    const tituloInput = document.querySelector('input[name="titulo"]');
+    if (tituloInput) {
+        tituloInput.addEventListener('input', function() {
+            // Add real-time validation feedback
+            if (this.value.length > 2) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.remove('is-valid');
+            }
+        });
+    }
+    
+    // Author input validation
+    const autorInput = document.querySelector('input[name="autor"]');
+    if (autorInput) {
+        autorInput.addEventListener('input', function() {
+            if (this.value.length > 2) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.remove('is-valid');
+            }
+        });
+    }
+    
+    // Category validation
+    const categoriaSelect = document.querySelector('select[name="categoria"]');
+    if (categoriaSelect) {
+        categoriaSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.remove('is-valid');
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

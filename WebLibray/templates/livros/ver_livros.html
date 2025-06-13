@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo de Livros - Biblioteca{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Catálogo de Livros</h1>
+        <p class="page-subtitle">Explore nossa coleção de livros</p>
+    </div>
+    
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('livros.ver_livros') }}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Pesquisar</label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       name="search" 
+                                       class="form-control" 
+                                       placeholder="Digite título ou autor..."
+                                       value="{{ search }}">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Categoria</label>
+                            <select name="categoria" class="form-control form-select">
+                                <option value="">Todas as categorias</option>
+                                {% for categoria in categorias %}
+                                    <option value="{{ categoria }}" 
+                                            {% if categoria == categoria_selecionada %}selected{% endif %}>
+                                        {{ categoria }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-outline w-100">
+                                <i class="fas fa-filter"></i> Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add Book Button (Admin Only) -->
+    {% if session.user_type == 'admin' %}
+    <div class="mb-4">
+        <a href="{{ url_for('livros.add_livro') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Adicionar Novo Livro
+        </a>
+    </div>
+    {% endif %}
+    
+    <!-- Books Grid -->
+    {% if livros %}
+    <div class="row">
+        {% for livro in livros %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="book-card" data-href="{{ url_for('livros.detalhes_livro', id=livro[0]) }}">
+                <div class="book-cover">
+                    {% if livro[5] %}
+                        <img src="{{ url_for('static', filename=livro[5]) }}" alt="{{ livro[1] }}">
+                    {% else %}
+                        <div class="cover-placeholder">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    {% endif %}
+                    <div class="book-overlay">
+                        <div class="book-actions">
+                            <a href="{{ url_for('livros.detalhes_livro', id=livro[0]) }}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i> Ver Detalhes
+                            </a>
+                            {% if session.user_type in ['aluno', 'professor'] and livro[6] == 'disponivel' %}
+                                <form method="POST" action="{{ url_for('emprestimos.solicitar_emprestimo', livro_id=livro[0]) }}" style="margin-top: 0.5rem;">
+                                    <button type="submit" class="btn btn-success btn-sm w-100">
+                                        <i class="fas fa-handshake"></i> Emprestar
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="book-info">
+                    <h4>{{ livro[1] }}</h4>
+                    <p class="book-author">{{ livro[2] }}</p>
+                    <p class="book-category">{{ livro[3] }}</p>
+                    <div class="book-status">
+                        <span class="badge badge-{% if livro[6] == 'disponivel' %}success{% else %}warning{% endif %}">
+                            {{ 'Disponível' if livro[6] == 'disponivel' else 'Emprestado' }}
+                        </span>
+                    </div>
+                    {% if session.user_type == 'admin' %}
+                    <div class="admin-actions mt-2">
+                        <a href="{{ url_for('livros.editar_livro', id=livro[0]) }}" 
+                           class="btn btn-outline btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('livros.delete_livro', id=livro[0]) }}" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('Tem certeza de que deseja eliminar este livro?')">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination (if needed) -->
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Navegação de páginas">
+            <ul class="pagination">
+                <li class="page-item disabled">
+                    <span class="page-link">Anterior</span>
+                </li>
+                <li class="page-item active">
+                    <span class="page-link">1</span>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Próximo</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    
+    {% else %}
+    <!-- No Books Found -->
+    <div class="text-center py-5">
+        <div class="empty-state">
+            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+            <h3>Nenhum livro encontrado</h3>
+            <p class="text-muted">
+                {% if search or categoria_selecionada %}
+                    Não foram encontrados livros com os critérios de pesquisa utilizados.
+                    <br><a href="{{ url_for('livros.ver_livros') }}">Ver todos os livros</a>
+                {% else %}
+                    O catálogo ainda não possui livros.
+                    {% if session.user_type == 'admin' %}
+                        <br><a href="{{ url_for('livros.add_livro') }}">Adicionar primeiro livro</a>
+                    {% endif %}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.book-card {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+    height: 100%;
+}
+
+.book-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-5px);
+}
+
+.book-cover {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+    background: var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cover-placeholder {
+    color: #6c757d;
+    font-size: 3rem;
+}
+
+.book-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.book-card:hover .book-overlay {
+    opacity: 1;
+}
+
+.book-actions {
+    text-align: center;
+}
+
+.book-info {
+    padding: 1.5rem;
+}
+
+.book-info h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--accent-1);
+    line-height: 1.3;
+    height: 2.6rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.book-author {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.book-category {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.book-status {
+    margin-bottom: 0.75rem;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.input-group-append {
+    margin-left: -1px;
+}
+
+.input-group-append .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.pagination {
+    margin: 0;
+}
+
+.page-link {
+    color: var(--primary-color);
+    border-color: #dee2e6;
+    padding: 0.75rem 1rem;
+}
+
+.page-link:hover {
+    color: var(--accent-3);
+    background-color: var(--light-gray);
+    border-color: #dee2e6;
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--white);
+}
+
+.empty-state {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .book-cover {
+        height: 200px;
+    }
+    
+    .book-info {
+        padding: 1rem;
+    }
+    
+    .book-info h4 {
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle book card clicks
+    const bookCards = document.querySelectorAll('.book-card[data-href]');
+    bookCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't trigger if clicking on buttons
+            if (!e.target.closest('button') && !e.target.closest('a')) {
+                window.location.href = this.dataset.href;
+            }
+        });
+    });
+    
+    // Animate cards on load
+    const cards = document.querySelectorAll('.book-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * (index % 8)); // Stagger animation for first 8 cards
+    });
+});
+</script>
+{% endblock %} 

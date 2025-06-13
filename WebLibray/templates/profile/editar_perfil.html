@@ -1,0 +1,731 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil - {{ utilizador.nome }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('profile.perfil') }}">Meu Perfil</a></li>
+                <li class="breadcrumb-item active">Editar</li>
+            </ol>
+        </nav>
+        <h1 class="page-title">
+            <i class="fas fa-user-edit"></i>
+            Editar Perfil
+        </h1>
+        <p class="page-subtitle">Atualize suas informações pessoais</p>
+    </div>
+    
+    <div class="row">
+        <!-- Profile Preview -->
+        <div class="col-lg-4 mb-4">
+            <div class="profile-preview-card">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <span id="avatarText">{{ utilizador.nome[0].upper() }}{{ utilizador.nome.split()[1][0].upper() if utilizador.nome.split()|length > 1 else '' }}</span>
+                    </div>
+                    <div class="profile-info">
+                        <h3 id="previewName">{{ utilizador.nome }}</h3>
+                        <p class="user-type">{{ utilizador.tipo_utilizador.title() }}</p>
+                        <p class="user-email" id="previewEmail">{{ utilizador.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h4>Membro desde</h4>
+                            <p>{{ utilizador.data_criacao.strftime('%d/%m/%Y') if utilizador.data_criacao else 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-reader"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h4>Empréstimos</h4>
+                            <p>{{ stats.total_emprestimos }} total</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-edit"></i>
+                        Informações Pessoais
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('profile.editar_perfil') }}" id="editProfileForm">
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-user"></i>
+                                Informações Básicas
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label required">Nome Completo</label>
+                                        <input type="text" 
+                                               name="nome" 
+                                               class="form-control" 
+                                               value="{{ utilizador.nome }}"
+                                               placeholder="Digite seu nome completo"
+                                               required
+                                               id="nomeInput">
+                                        <div class="invalid-feedback">
+                                            Por favor, insira seu nome completo.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label required">Email</label>
+                                        <input type="email" 
+                                               name="email" 
+                                               class="form-control" 
+                                               value="{{ utilizador.email }}"
+                                               placeholder="Digite seu email"
+                                               required
+                                               id="emailInput">
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um email válido.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-address-book"></i>
+                                Informações de Contacto
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Telefone</label>
+                                        <input type="tel" 
+                                               name="telefone" 
+                                               class="form-control" 
+                                               value="{{ utilizador.telefone if utilizador.telefone else '' }}"
+                                               placeholder="Digite seu telefone (opcional)">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Data de Nascimento</label>
+                                        <input type="date" 
+                                               name="data_nascimento" 
+                                               class="form-control" 
+                                               value="{{ utilizador.data_nascimento.strftime('%Y-%m-%d') if utilizador.data_nascimento else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Endereço</label>
+                                <textarea name="endereco" 
+                                          class="form-control" 
+                                          rows="3" 
+                                          placeholder="Digite seu endereço completo (opcional)">{{ utilizador.endereco if utilizador.endereco else '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Academic Information (if student or professor) -->
+                        {% if utilizador.tipo_utilizador in ['aluno', 'professor'] %}
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-graduation-cap"></i>
+                                Informações Académicas
+                            </h5>
+                            
+                            <div class="row">
+                                {% if utilizador.tipo_utilizador == 'aluno' %}
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Número de Aluno</label>
+                                        <input type="text" 
+                                               name="numero_aluno" 
+                                               class="form-control" 
+                                               value="{{ utilizador.numero_aluno if utilizador.numero_aluno else '' }}"
+                                               placeholder="Digite seu número de aluno">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Curso</label>
+                                        <input type="text" 
+                                               name="curso" 
+                                               class="form-control" 
+                                               value="{{ utilizador.curso if utilizador.curso else '' }}"
+                                               placeholder="Digite seu curso">
+                                    </div>
+                                </div>
+                                {% elif utilizador.tipo_utilizador == 'professor' %}
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Departamento</label>
+                                        <input type="text" 
+                                               name="departamento" 
+                                               class="form-control" 
+                                               value="{{ utilizador.departamento if utilizador.departamento else '' }}"
+                                               placeholder="Digite seu departamento">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Área de Especialização</label>
+                                        <input type="text" 
+                                               name="especializacao" 
+                                               class="form-control" 
+                                               value="{{ utilizador.especializacao if utilizador.especializacao else '' }}"
+                                               placeholder="Digite sua área de especialização">
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Preferences -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-cog"></i>
+                                Preferências
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Categorias Favoritas</label>
+                                        <select name="categorias_favoritas" class="form-control form-select" multiple>
+                                            <option value="Ficção">Ficção</option>
+                                            <option value="Romance">Romance</option>
+                                            <option value="Mistério">Mistério</option>
+                                            <option value="Fantasia">Fantasia</option>
+                                            <option value="Ficção Científica">Ficção Científica</option>
+                                            <option value="Terror">Terror</option>
+                                            <option value="História">História</option>
+                                            <option value="Geografia">Geografia</option>
+                                            <option value="Biografia">Biografia</option>
+                                            <option value="Ciência">Ciência</option>
+                                            <option value="Tecnologia">Tecnologia</option>
+                                            <option value="Filosofia">Filosofia</option>
+                                            <option value="Psicologia">Psicologia</option>
+                                            <option value="Educação">Educação</option>
+                                        </select>
+                                        <small class="form-text text-muted">
+                                            Mantenha Ctrl pressionado para selecionar múltiplas categorias
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Notificações</label>
+                                        <div class="notification-options">
+                                            <div class="custom-checkbox">
+                                                <input type="checkbox" 
+                                                       id="notif_email" 
+                                                       name="notificacoes_email" 
+                                                       {% if utilizador.notificacoes_email %}checked{% endif %}>
+                                                <label for="notif_email">
+                                                    <i class="fas fa-envelope"></i>
+                                                    Receber notificações por email
+                                                </label>
+                                            </div>
+                                            <div class="custom-checkbox">
+                                                <input type="checkbox" 
+                                                       id="notif_lembrete" 
+                                                       name="lembretes_devolucao" 
+                                                       {% if utilizador.lembretes_devolucao %}checked{% endif %}>
+                                                <label for="notif_lembrete">
+                                                    <i class="fas fa-bell"></i>
+                                                    Lembretes de devolução
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bio -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-user-circle"></i>
+                                Sobre Você
+                            </h5>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Biografia</label>
+                                <textarea name="biografia" 
+                                          class="form-control" 
+                                          rows="4" 
+                                          placeholder="Conte um pouco sobre você, seus interesses de leitura... (opcional)">{{ utilizador.biografia if utilizador.biografia else '' }}</textarea>
+                                <small class="form-text text-muted">
+                                    Máximo de 500 caracteres. <span id="bio-count">{{ utilizador.biografia|length if utilizador.biografia else 0 }}/500</span>
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Guardar Alterações
+                            </button>
+                            <a href="{{ url_for('profile.perfil') }}" class="btn btn-outline">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <button type="button" class="btn btn-warning" onclick="resetForm()">
+                                <i class="fas fa-undo"></i> Repor Valores
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: #6c757d;
+}
+
+.breadcrumb-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.profile-preview-card {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: sticky;
+    top: 2rem;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-3));
+    color: var(--white);
+    padding: 2rem;
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    transition: var(--transition);
+}
+
+.profile-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.user-type {
+    margin: 0 0 0.25rem 0;
+    opacity: 0.9;
+    font-size: 1rem;
+}
+
+.user-email {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.profile-stats {
+    padding: 1.5rem;
+    background: var(--light-gray);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    margin-right: 1rem;
+}
+
+.stat-content h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-1);
+}
+
+.stat-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent-1);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.notification-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+}
+
+.custom-checkbox input {
+    margin-right: 0.75rem;
+    transform: scale(1.1);
+}
+
+.custom-checkbox label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--accent-1);
+}
+
+.custom-checkbox label i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+    width: 16px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.was-validated .form-control:invalid {
+    border-color: #dc3545;
+}
+
+.was-validated .form-control:valid {
+    border-color: #28a745;
+}
+
+#bio-count {
+    font-weight: 500;
+}
+
+@media (max-width: 992px) {
+    .profile-preview-card {
+        position: static;
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        padding: 1.5rem;
+    }
+    
+    .profile-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 1.2rem;
+    }
+    
+    .profile-info h3 {
+        font-size: 1.25rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .notification-options {
+        margin-top: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Store original form values
+const originalValues = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editProfileForm');
+    const nomeInput = document.getElementById('nomeInput');
+    const emailInput = document.getElementById('emailInput');
+    const previewName = document.getElementById('previewName');
+    const previewEmail = document.getElementById('previewEmail');
+    const avatarText = document.getElementById('avatarText');
+    const biografiaTextarea = document.querySelector('textarea[name="biografia"]');
+    const bioCount = document.getElementById('bio-count');
+    
+    // Store original values
+    const formElements = form.querySelectorAll('input, select, textarea');
+    formElements.forEach(element => {
+        if (element.type === 'checkbox') {
+            originalValues[element.name] = element.checked;
+        } else {
+            originalValues[element.name] = element.value;
+        }
+    });
+    
+    // Real-time preview updates
+    nomeInput.addEventListener('input', function() {
+        previewName.textContent = this.value || 'Nome do Utilizador';
+        updateAvatar(this.value);
+    });
+    
+    emailInput.addEventListener('input', function() {
+        previewEmail.textContent = this.value || 'email@exemplo.com';
+    });
+    
+    function updateAvatar(nome) {
+        if (nome) {
+            const parts = nome.trim().split(' ');
+            let initials = parts[0].charAt(0).toUpperCase();
+            if (parts.length > 1) {
+                initials += parts[parts.length - 1].charAt(0).toUpperCase();
+            }
+            avatarText.textContent = initials;
+        } else {
+            avatarText.textContent = 'U';
+        }
+    }
+    
+    // Character count for biography
+    if (biografiaTextarea && bioCount) {
+        biografiaTextarea.addEventListener('input', function() {
+            const current = this.value.length;
+            const max = 500;
+            bioCount.textContent = `${current}/${max}`;
+            
+            if (current > max) {
+                bioCount.style.color = '#dc3545';
+                this.value = this.value.substring(0, max);
+                bioCount.textContent = `${max}/${max}`;
+            } else {
+                bioCount.style.color = '';
+            }
+        });
+    }
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        } else {
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            submitBtn.disabled = true;
+            
+            // Re-enable after some time in case of error
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 10000);
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Email validation
+    emailInput.addEventListener('blur', function() {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (this.value && !emailRegex.test(this.value)) {
+            this.setCustomValidity('Por favor, insira um email válido');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+    
+    // Real-time validation feedback
+    const requiredInputs = form.querySelectorAll('input[required]');
+    requiredInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.checkValidity()) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.remove('is-valid');
+            }
+        });
+    });
+    
+    // Animate form sections
+    const sections = document.querySelectorAll('.form-section');
+    sections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            section.style.transition = 'all 0.6s ease';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, 200 + (100 * index));
+    });
+});
+
+// Reset form to original values
+function resetForm() {
+    const confirmed = confirm('Tem certeza de que deseja repor todos os valores originais? As alterações não guardadas serão perdidas.');
+    if (!confirmed) return;
+    
+    const form = document.getElementById('editProfileForm');
+    const formElements = form.querySelectorAll('input, select, textarea');
+    
+    formElements.forEach(element => {
+        if (originalValues.hasOwnProperty(element.name)) {
+            if (element.type === 'checkbox') {
+                element.checked = originalValues[element.name];
+            } else {
+                element.value = originalValues[element.name];
+            }
+        }
+    });
+    
+    // Update preview
+    const nomeInput = document.getElementById('nomeInput');
+    const emailInput = document.getElementById('emailInput');
+    const previewName = document.getElementById('previewName');
+    const previewEmail = document.getElementById('previewEmail');
+    const avatarText = document.getElementById('avatarText');
+    
+    previewName.textContent = nomeInput.value;
+    previewEmail.textContent = emailInput.value;
+    
+    const parts = nomeInput.value.trim().split(' ');
+    let initials = parts[0].charAt(0).toUpperCase();
+    if (parts.length > 1) {
+        initials += parts[parts.length - 1].charAt(0).toUpperCase();
+    }
+    avatarText.textContent = initials;
+    
+    // Update character count
+    const biografiaTextarea = document.querySelector('textarea[name="biografia"]');
+    const bioCount = document.getElementById('bio-count');
+    if (biografiaTextarea && bioCount) {
+        bioCount.textContent = `${biografiaTextarea.value.length}/500`;
+    }
+    
+    // Remove validation classes
+    form.classList.remove('was-validated');
+    formElements.forEach(element => {
+        element.classList.remove('is-valid', 'is-invalid');
+    });
+}
+
+// Warn about unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    const form = document.getElementById('editProfileForm');
+    const formElements = form.querySelectorAll('input, select, textarea');
+    let hasChanges = false;
+    
+    formElements.forEach(element => {
+        if (originalValues.hasOwnProperty(element.name)) {
+            let currentValue;
+            if (element.type === 'checkbox') {
+                currentValue = element.checked;
+            } else {
+                currentValue = element.value;
+            }
+            
+            if (currentValue !== originalValues[element.name]) {
+                hasChanges = true;
+            }
+        }
+    });
+    
+    if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = 'Tem alterações não guardadas. Tem certeza de que deseja sair?';
+        return e.returnValue;
+    }
+});
+</script>
+{% endblock %} 

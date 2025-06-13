@@ -1,0 +1,766 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil - {{ utilizador.nome }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-user"></i>
+            Meu Perfil
+        </h1>
+        <p class="page-subtitle">Gerencie suas informações pessoais e preferências</p>
+    </div>
+    
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <span>{{ utilizador.nome[0].upper() }}{{ utilizador.nome.split()[1][0].upper() if utilizador.nome.split()|length > 1 else '' }}</span>
+                    </div>
+                    <div class="profile-info">
+                        <h2>{{ utilizador.nome }}</h2>
+                        <p class="user-type">{{ utilizador.tipo_utilizador.title() }}</p>
+                        <p class="user-email">{{ utilizador.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-reader"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ stats.emprestimos_ativos }}</h3>
+                            <p>Empréstimos Ativos</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ stats.total_emprestimos }}</h3>
+                            <p>Total de Empréstimos</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ stats.livros_devolvidos }}</h3>
+                            <p>Livros Devolvidos</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <a href="{{ url_for('profile.editar_perfil') }}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-edit"></i> Editar Perfil
+                    </a>
+                    <a href="{{ url_for('profile.alterar_password') }}" class="btn btn-outline w-100">
+                        <i class="fas fa-key"></i> Alterar Password
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Details -->
+        <div class="col-lg-8">
+            <!-- Account Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-info-circle"></i>
+                        Informações da Conta
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Nome Completo</label>
+                                <div class="info-value">{{ utilizador.nome }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Email</label>
+                                <div class="info-value">{{ utilizador.email }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Tipo de Utilizador</label>
+                                <div class="info-value">
+                                    <span class="user-type-badge user-type-{{ utilizador.tipo_utilizador }}">
+                                        <i class="fas fa-{% if utilizador.tipo_utilizador == 'admin' %}user-shield{% elif utilizador.tipo_utilizador == 'professor' %}chalkboard-teacher{% else %}user-graduate{% endif %}"></i>
+                                        {{ utilizador.tipo_utilizador.title() }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Status da Conta</label>
+                                <div class="info-value">
+                                    <span class="status-badge status-{{ utilizador.status }}">
+                                        <i class="fas fa-circle"></i>
+                                        {{ utilizador.status.title() }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Membro desde</label>
+                                <div class="info-value">{{ utilizador.data_criacao.strftime('%d/%m/%Y') if utilizador.data_criacao else 'N/A' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Último Acesso</label>
+                                <div class="info-value">
+                                    {% if utilizador.ultimo_acesso %}
+                                        {{ utilizador.ultimo_acesso.strftime('%d/%m/%Y às %H:%M') }}
+                                    {% else %}
+                                        Nunca
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reading Activity -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        Atividade de Leitura
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="activity-stat">
+                                <div class="activity-number">{{ stats.este_mes }}</div>
+                                <div class="activity-label">Este Mês</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="activity-stat">
+                                <div class="activity-number">{{ stats.este_ano }}</div>
+                                <div class="activity-label">Este Ano</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="activity-stat">
+                                <div class="activity-number">{{ stats.media_mensal }}</div>
+                                <div class="activity-label">Média Mensal</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="activity-stat">
+                                <div class="activity-number">{{ stats.categoria_favorita }}</div>
+                                <div class="activity-label">Categoria Favorita</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if stats.categorias_lidas %}
+                    <div class="mt-4">
+                        <h5>Categorias Mais Lidas</h5>
+                        <div class="category-chart">
+                            {% for categoria in stats.categorias_lidas %}
+                            <div class="category-item">
+                                <div class="category-name">{{ categoria.nome }}</div>
+                                <div class="category-bar">
+                                    <div class="category-progress" style="width: {{ categoria.percentagem }}%"></div>
+                                </div>
+                                <div class="category-count">{{ categoria.total }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Current Loans -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-book-open"></i>
+                        Empréstimos Atuais
+                    </h3>
+                    <div class="card-actions">
+                        <a href="{{ url_for('profile.meus_emprestimos') }}" class="btn btn-outline btn-sm">
+                            Ver Todos
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if emprestimos_atuais %}
+                    <div class="current-loans">
+                        {% for emprestimo in emprestimos_atuais %}
+                        <div class="loan-card {% if emprestimo.em_atraso %}overdue{% endif %}">
+                            <div class="loan-book-cover">
+                                {% if emprestimo.capa %}
+                                    <img src="{{ url_for('static', filename=emprestimo.capa) }}" alt="{{ emprestimo.titulo }}">
+                                {% else %}
+                                    <div class="cover-placeholder">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="loan-info">
+                                <h4>{{ emprestimo.titulo }}</h4>
+                                <p class="author">{{ emprestimo.autor }}</p>
+                                <p class="loan-date">
+                                    <i class="fas fa-calendar"></i>
+                                    Emprestado em {{ emprestimo.data_emprestimo.strftime('%d/%m/%Y') }}
+                                </p>
+                                <p class="due-date {% if emprestimo.em_atraso %}text-danger{% endif %}">
+                                    <i class="fas fa-clock"></i>
+                                    {% if emprestimo.em_atraso %}
+                                        {{ emprestimo.dias_atraso }} dias em atraso
+                                    {% else %}
+                                        Devolução em {{ emprestimo.data_limite.strftime('%d/%m/%Y') }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="loan-actions">
+                                {% if emprestimo.pode_renovar %}
+                                <form method="POST" action="{{ url_for('emprestimos.renovar_emprestimo', id=emprestimo.id) }}">
+                                    <button type="submit" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-redo"></i> Renovar
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('livros.detalhes_livro', id=emprestimo.livro_id) }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i> Ver Livro
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                        <h4>Nenhum empréstimo ativo</h4>
+                        <p class="text-muted">Explore nosso catálogo e faça um empréstimo!</p>
+                        <a href="{{ url_for('livros.ver_livros') }}" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Explorar Catálogo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Reading Preferences -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-heart"></i>
+                        Preferências de Leitura
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if preferencias %}
+                    <div class="preferences-grid">
+                        {% for categoria in preferencias %}
+                        <div class="preference-item">
+                            <div class="preference-icon">
+                                <i class="fas fa-bookmark"></i>
+                            </div>
+                            <div class="preference-content">
+                                <h5>{{ categoria.nome }}</h5>
+                                <p>{{ categoria.total }} livros lidos</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-heart fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Suas preferências aparecerão aqui conforme você lê mais livros.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-card {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: sticky;
+    top: 2rem;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-3));
+    color: var(--white);
+    padding: 2rem;
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.profile-info h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.user-type {
+    margin: 0 0 0.25rem 0;
+    opacity: 0.9;
+    font-size: 1rem;
+}
+
+.user-email {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.profile-stats {
+    padding: 1.5rem;
+    background: var(--light-gray);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    margin-right: 1rem;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--accent-1);
+}
+
+.stat-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.profile-actions {
+    padding: 1.5rem;
+}
+
+.info-item {
+    margin-bottom: 1.5rem;
+}
+
+.info-label {
+    display: block;
+    font-weight: 600;
+    color: var(--accent-1);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.info-value {
+    color: #495057;
+    font-size: 1rem;
+}
+
+.user-type-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--border-radius);
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.user-type-admin {
+    background: rgba(62, 142, 222, 0.1);
+    color: var(--primary-color);
+}
+
+.user-type-professor {
+    background: rgba(81, 196, 211, 0.1);
+    color: var(--accent-3);
+}
+
+.user-type-aluno {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.status-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--border-radius);
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-ativo {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.status-inativo {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.status-badge i {
+    font-size: 0.6rem;
+}
+
+.activity-stat {
+    text-align: center;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+}
+
+.activity-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.activity-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.category-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.category-name {
+    min-width: 120px;
+    font-weight: 500;
+    color: var(--accent-1);
+}
+
+.category-bar {
+    flex: 1;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.category-progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-3));
+    transition: width 0.3s ease;
+}
+
+.category-count {
+    min-width: 30px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--accent-1);
+}
+
+.current-loans {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.loan-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.loan-card:hover {
+    background: #e9ecef;
+}
+
+.loan-card.overdue {
+    border-left: 4px solid #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+}
+
+.loan-book-cover {
+    width: 60px;
+    height: 80px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.loan-book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1.5rem;
+}
+
+.loan-info {
+    flex: 1;
+}
+
+.loan-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-1);
+}
+
+.loan-info .author {
+    margin: 0 0 0.5rem 0;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+.loan-info .loan-date,
+.loan-info .due-date {
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.loan-info .due-date i {
+    margin-right: 0.25rem;
+}
+
+.loan-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.preferences-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.preference-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+}
+
+.preference-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-2);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+}
+
+.preference-content h5 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: var(--accent-1);
+}
+
+.preference-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+}
+
+@media (max-width: 992px) {
+    .profile-card {
+        position: static;
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        padding: 1.5rem;
+    }
+    
+    .profile-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 1.2rem;
+    }
+    
+    .profile-info h2 {
+        font-size: 1.25rem;
+    }
+    
+    .profile-stats,
+    .profile-actions {
+        padding: 1rem;
+    }
+    
+    .loan-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .loan-book-cover {
+        align-self: center;
+    }
+    
+    .loan-actions {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+    }
+    
+    .preferences-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate profile card entrance
+    const profileCard = document.querySelector('.profile-card');
+    profileCard.style.opacity = '0';
+    profileCard.style.transform = 'translateY(-30px)';
+    
+    setTimeout(() => {
+        profileCard.style.transition = 'all 0.6s ease';
+        profileCard.style.opacity = '1';
+        profileCard.style.transform = 'translateY(0)';
+    }, 200);
+    
+    // Animate other cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 300 + (100 * index));
+    });
+    
+    // Animate category progress bars
+    const progressBars = document.querySelectorAll('.category-progress');
+    progressBars.forEach((bar, index) => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 1000 + (200 * index));
+    });
+    
+    // Animate activity stats
+    const activityNumbers = document.querySelectorAll('.activity-number');
+    activityNumbers.forEach((number, index) => {
+        const finalValue = parseInt(number.textContent);
+        number.textContent = '0';
+        
+        setTimeout(() => {
+            animateNumber(number, 0, finalValue, 1000);
+        }, 800 + (200 * index));
+    });
+});
+
+function animateNumber(element, start, end, duration) {
+    const startTime = Date.now();
+    const timer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.floor(start + (end - start) * progress);
+        
+        element.textContent = current;
+        
+        if (progress >= 1) {
+            clearInterval(timer);
+        }
+    }, 16);
+}
+</script>
+{% endblock %} 

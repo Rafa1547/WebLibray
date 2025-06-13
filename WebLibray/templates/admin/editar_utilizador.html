@@ -1,0 +1,866 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Utilizador - {{ utilizador.nome }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.gerir_utilizadores') }}">Utilizadores</a></li>
+                <li class="breadcrumb-item active">{{ utilizador.nome }}</li>
+            </ol>
+        </nav>
+        <h1 class="page-title">
+            <i class="fas fa-user-edit"></i>
+            Editar Utilizador
+        </h1>
+        <p class="page-subtitle">Atualize as informações de {{ utilizador.nome }}</p>
+    </div>
+    
+    <div class="row">
+        <!-- User Preview -->
+        <div class="col-lg-4 mb-4">
+            <div class="user-preview-card">
+                <div class="user-header">
+                    <div class="user-avatar" id="userAvatar">
+                        <span id="avatarText">{{ utilizador.nome[0].upper() }}{{ utilizador.nome.split()[1][0].upper() if utilizador.nome.split()|length > 1 else '' }}</span>
+                    </div>
+                    <div class="user-info">
+                        <h3 id="previewName">{{ utilizador.nome }}</h3>
+                        <p class="user-type" id="previewType">{{ utilizador.tipo_utilizador.title() }}</p>
+                        <p class="user-email" id="previewEmail">{{ utilizador.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h4>Membro desde</h4>
+                            <p>{{ utilizador.data_criacao.strftime('%d/%m/%Y') if utilizador.data_criacao else 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-reader"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h4>Empréstimos</h4>
+                            <p>{{ stats.total_emprestimos }} total</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h4>Último Acesso</h4>
+                            <p>{{ utilizador.ultimo_acesso.strftime('%d/%m/%Y') if utilizador.ultimo_acesso else 'Nunca' }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="user-actions">
+                    <a href="{{ url_for('admin.reset_password', id=utilizador.id) }}" class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-key"></i> Reset Password
+                    </a>
+                    {% if utilizador.status == 'ativo' %}
+                    <form method="POST" action="{{ url_for('admin.toggle_user_status', id=utilizador.id) }}">
+                        <button type="submit" class="btn btn-outline-warning w-100" onclick="return confirm('Desativar este utilizador?')">
+                            <i class="fas fa-ban"></i> Desativar Utilizador
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('admin.toggle_user_status', id=utilizador.id) }}">
+                        <button type="submit" class="btn btn-outline-success w-100">
+                            <i class="fas fa-check"></i> Ativar Utilizador
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-edit"></i>
+                        Informações do Utilizador
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.editar_utilizador', id=utilizador.id) }}" id="editUserForm">
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-user"></i>
+                                Informações Básicas
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label required">Nome Completo</label>
+                                        <input type="text" 
+                                               name="nome" 
+                                               class="form-control" 
+                                               value="{{ utilizador.nome }}"
+                                               placeholder="Digite o nome completo"
+                                               required
+                                               id="nomeInput">
+                                        <div class="invalid-feedback">
+                                            Por favor, insira o nome completo.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label required">Email</label>
+                                        <input type="email" 
+                                               name="email" 
+                                               class="form-control" 
+                                               value="{{ utilizador.email }}"
+                                               placeholder="Digite o endereço de email"
+                                               required
+                                               id="emailInput">
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um email válido.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label required">Tipo de Utilizador</label>
+                                        <select name="tipo_utilizador" class="form-control form-select" required id="tipoSelect">
+                                            <option value="">Selecione o tipo</option>
+                                            <option value="admin" {% if utilizador.tipo_utilizador == 'admin' %}selected{% endif %}>Administrador</option>
+                                            <option value="professor" {% if utilizador.tipo_utilizador == 'professor' %}selected{% endif %}>Professor</option>
+                                            <option value="aluno" {% if utilizador.tipo_utilizador == 'aluno' %}selected{% endif %}>Aluno</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Por favor, selecione o tipo de utilizador.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label required">Status</label>
+                                        <select name="status" class="form-control form-select" required>
+                                            <option value="ativo" {% if utilizador.status == 'ativo' %}selected{% endif %}>Ativo</option>
+                                            <option value="inativo" {% if utilizador.status == 'inativo' %}selected{% endif %}>Inativo</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Por favor, selecione o status.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-address-book"></i>
+                                Informações de Contacto
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Telefone</label>
+                                        <input type="tel" 
+                                               name="telefone" 
+                                               class="form-control" 
+                                               value="{{ utilizador.telefone if utilizador.telefone else '' }}"
+                                               placeholder="Digite o telefone (opcional)">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Data de Nascimento</label>
+                                        <input type="date" 
+                                               name="data_nascimento" 
+                                               class="form-control" 
+                                               value="{{ utilizador.data_nascimento.strftime('%Y-%m-%d') if utilizador.data_nascimento else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Endereço</label>
+                                <textarea name="endereco" 
+                                          class="form-control" 
+                                          rows="3" 
+                                          placeholder="Digite o endereço completo (opcional)">{{ utilizador.endereco if utilizador.endereco else '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Academic Information -->
+                        <div class="form-section" id="academicSection">
+                            <h5 class="section-title">
+                                <i class="fas fa-graduation-cap"></i>
+                                Informações Académicas
+                            </h5>
+                            
+                            <div class="row academic-fields student-fields {% if utilizador[4] != 'aluno' %}d-none{% endif %}" id="studentFields">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Número de Aluno</label>
+                                        <input type="text" 
+                                               name="numero_aluno" 
+                                               class="form-control" 
+                                               value="{{ utilizador[7] if utilizador[7] else '' }}"
+                                               placeholder="Digite o número de aluno">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Curso</label>
+                                        <input type="text" 
+                                               name="curso" 
+                                               class="form-control" 
+                                               value="{{ utilizador[8] if utilizador[8] else '' }}"
+                                               placeholder="Digite o curso">
+                                    </div>
+                                </div>
+                            </div>
+            
+                            <div class="row academic-fields professor-fields {% if utilizador[4] != 'professor' %}d-none{% endif %}" id="professorFields">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Departamento</label>
+                                        <input type="text" 
+                                               name="departamento" 
+                                               class="form-control" 
+                                               value="{{ utilizador[9] if utilizador[9] else '' }}"
+                                               placeholder="Digite o departamento">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Área de Especialização</label>
+                                        <input type="text" 
+                                               name="especializacao" 
+                                               class="form-control" 
+                                               value="{{ utilizador[10] if utilizador[10] else '' }}"
+                                               placeholder="Digite a área de especialização">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Permissions and Settings -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-cog"></i>
+                                Configurações
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Notificações</label>
+                                        <div class="notification-options">
+                                            <div class="custom-checkbox">
+                                                <input type="checkbox" 
+                                                       id="notif_email" 
+                                                       name="notificacoes_email" 
+                                                       {% if utilizador.notificacoes_email %}checked{% endif %}>
+                                                <label for="notif_email">
+                                                    <i class="fas fa-envelope"></i>
+                                                    Receber notificações por email
+                                                </label>
+                                            </div>
+                                            <div class="custom-checkbox">
+                                                <input type="checkbox" 
+                                                       id="notif_lembrete" 
+                                                       name="lembretes_devolucao" 
+                                                       {% if utilizador.lembretes_devolucao %}checked{% endif %}>
+                                                <label for="notif_lembrete">
+                                                    <i class="fas fa-bell"></i>
+                                                    Lembretes de devolução
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Opções de Conta</label>
+                                        <div class="account-options">
+                                            <div class="custom-checkbox">
+                                                <input type="checkbox" 
+                                                       id="forcar_alteracao_password" 
+                                                       name="forcar_alteracao_password" 
+                                                       {% if utilizador.forcar_alteracao_password %}checked{% endif %}>
+                                                <label for="forcar_alteracao_password">
+                                                    <i class="fas fa-key"></i>
+                                                    Forçar alteração de password no próximo login
+                                                </label>
+                                            </div>
+                                            {% if utilizador.id != session.user_id %}
+                                            <div class="custom-checkbox">
+                                                <input type="checkbox" 
+                                                       id="conta_bloqueada" 
+                                                       name="conta_bloqueada" 
+                                                       {% if utilizador.conta_bloqueada %}checked{% endif %}>
+                                                <label for="conta_bloqueada">
+                                                    <i class="fas fa-lock"></i>
+                                                    Conta temporariamente bloqueada
+                                                </label>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-sticky-note"></i>
+                                Observações Administrativas
+                            </h5>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Notas Internas</label>
+                                <textarea name="notas_admin" 
+                                          class="form-control" 
+                                          rows="4" 
+                                          placeholder="Observações visíveis apenas para administradores (opcional)">{{ utilizador.notas_admin if utilizador.notas_admin else '' }}</textarea>
+                                <small class="form-text text-muted">
+                                    Máximo de 500 caracteres. <span id="notes-count">{{ utilizador.notas_admin|length if utilizador.notas_admin else 0 }}/500</span>
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Guardar Alterações
+                            </button>
+                            <a href="{{ url_for('admin.gerir_utilizadores') }}" class="btn btn-outline">
+                                <i class="fas fa-arrow-left"></i> Voltar à Lista
+                            </a>
+                            <button type="button" class="btn btn-warning" onclick="resetForm()">
+                                <i class="fas fa-undo"></i> Repor Valores
+                            </button>
+                            {% if utilizador.id != session.user_id and utilizador.tipo_utilizador != 'admin' %}
+                            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                                <i class="fas fa-trash"></i> Eliminar Utilizador
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p>Tem certeza de que deseja eliminar o utilizador <strong>{{ utilizador.nome }}</strong>?</p>
+                <p class="text-muted">Todos os dados associados a este utilizador serão permanentemente removidos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('admin.delete_utilizador', id=utilizador.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: #6c757d;
+}
+
+.breadcrumb-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.user-preview-card {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: sticky;
+    top: 2rem;
+}
+
+.user-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-3));
+    color: var(--white);
+    padding: 2rem;
+    text-align: center;
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    transition: var(--transition);
+}
+
+.user-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.user-type {
+    margin: 0 0 0.25rem 0;
+    opacity: 0.9;
+    font-size: 1rem;
+}
+
+.user-email {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.user-stats {
+    padding: 1.5rem;
+    background: var(--light-gray);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    margin-right: 1rem;
+}
+
+.stat-content h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-1);
+}
+
+.stat-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.user-actions {
+    padding: 1.5rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent-1);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.notification-options,
+.account-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+}
+
+.custom-checkbox input {
+    margin-right: 0.75rem;
+    transform: scale(1.1);
+}
+
+.custom-checkbox label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--accent-1);
+}
+
+.custom-checkbox label i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+    width: 16px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #dee2e6;
+    flex-wrap: wrap;
+}
+
+.was-validated .form-control:invalid {
+    border-color: #dc3545;
+}
+
+.was-validated .form-control:valid {
+    border-color: #28a745;
+}
+
+#notes-count {
+    font-weight: 500;
+}
+
+@media (max-width: 992px) {
+    .user-preview-card {
+        position: static;
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .user-header {
+        padding: 1.5rem;
+    }
+    
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 1.2rem;
+    }
+    
+    .user-info h3 {
+        font-size: 1.25rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .notification-options,
+    .account-options {
+        margin-top: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Store original form values
+const originalValues = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editUserForm');
+    const nomeInput = document.getElementById('nomeInput');
+    const emailInput = document.getElementById('emailInput');
+    const tipoSelect = document.getElementById('tipoSelect');
+    const previewName = document.getElementById('previewName');
+    const previewEmail = document.getElementById('previewEmail');
+    const previewType = document.getElementById('previewType');
+    const avatarText = document.getElementById('avatarText');
+    const notasTextarea = document.querySelector('textarea[name="notas_admin"]');
+    const notesCount = document.getElementById('notes-count');
+    
+    // Store original values
+    const formElements = form.querySelectorAll('input, select, textarea');
+    formElements.forEach(element => {
+        if (element.type === 'checkbox') {
+            originalValues[element.name] = element.checked;
+        } else {
+            originalValues[element.name] = element.value;
+        }
+    });
+    
+    // Real-time preview updates
+    nomeInput.addEventListener('input', function() {
+        previewName.textContent = this.value || 'Nome do Utilizador';
+        updateAvatar(this.value);
+    });
+    
+    emailInput.addEventListener('input', function() {
+        previewEmail.textContent = this.value || 'email@exemplo.com';
+    });
+    
+    tipoSelect.addEventListener('change', function() {
+        previewType.textContent = this.value ? this.value.charAt(0).toUpperCase() + this.value.slice(1) : 'Tipo';
+        toggleAcademicFields();
+    });
+    
+    function updateAvatar(nome) {
+        if (nome) {
+            const parts = nome.trim().split(' ');
+            let initials = parts[0].charAt(0).toUpperCase();
+            if (parts.length > 1) {
+                initials += parts[parts.length - 1].charAt(0).toUpperCase();
+            }
+            avatarText.textContent = initials;
+        } else {
+            avatarText.textContent = 'U';
+        }
+    }
+    
+    function toggleAcademicFields() {
+        const tipo = tipoSelect.value;
+        const studentFields = document.getElementById('studentFields');
+        const professorFields = document.getElementById('professorFields');
+        
+        if (tipo === 'aluno') {
+            studentFields.classList.remove('d-none');
+            professorFields.classList.add('d-none');
+        } else if (tipo === 'professor') {
+            studentFields.classList.add('d-none');
+            professorFields.classList.remove('d-none');
+        } else {
+            studentFields.classList.add('d-none');
+            professorFields.classList.add('d-none');
+        }
+    }
+    
+    // Character count for notes
+    if (notasTextarea && notesCount) {
+        notasTextarea.addEventListener('input', function() {
+            const current = this.value.length;
+            const max = 500;
+            notesCount.textContent = `${current}/${max}`;
+            
+            if (current > max) {
+                notesCount.style.color = '#dc3545';
+                this.value = this.value.substring(0, max);
+                notesCount.textContent = `${max}/${max}`;
+            } else {
+                notesCount.style.color = '';
+            }
+        });
+    }
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        } else {
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            submitBtn.disabled = true;
+            
+            // Re-enable after some time in case of error
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 10000);
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Email validation
+    emailInput.addEventListener('blur', function() {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (this.value && !emailRegex.test(this.value)) {
+            this.setCustomValidity('Por favor, insira um email válido');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+    
+    // Real-time validation feedback
+    const requiredInputs = form.querySelectorAll('input[required], select[required]');
+    requiredInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.checkValidity()) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.remove('is-valid');
+            }
+        });
+    });
+    
+    // Initialize academic fields visibility
+    toggleAcademicFields();
+});
+
+// Reset form to original values
+function resetForm() {
+    const confirmed = confirm('Tem certeza de que deseja repor todos os valores originais? As alterações não guardadas serão perdidas.');
+    if (!confirmed) return;
+    
+    const form = document.getElementById('editUserForm');
+    const formElements = form.querySelectorAll('input, select, textarea');
+    
+    formElements.forEach(element => {
+        if (originalValues.hasOwnProperty(element.name)) {
+            if (element.type === 'checkbox') {
+                element.checked = originalValues[element.name];
+            } else {
+                element.value = originalValues[element.name];
+            }
+        }
+    });
+    
+    // Update preview
+    const nomeInput = document.getElementById('nomeInput');
+    const emailInput = document.getElementById('emailInput');
+    const tipoSelect = document.getElementById('tipoSelect');
+    
+    document.getElementById('previewName').textContent = nomeInput.value;
+    document.getElementById('previewEmail').textContent = emailInput.value;
+    document.getElementById('previewType').textContent = tipoSelect.value.charAt(0).toUpperCase() + tipoSelect.value.slice(1);
+    
+    const parts = nomeInput.value.trim().split(' ');
+    let initials = parts[0].charAt(0).toUpperCase();
+    if (parts.length > 1) {
+        initials += parts[parts.length - 1].charAt(0).toUpperCase();
+    }
+    document.getElementById('avatarText').textContent = initials;
+    
+    // Update character count
+    const notasTextarea = document.querySelector('textarea[name="notas_admin"]');
+    const notesCount = document.getElementById('notes-count');
+    if (notasTextarea && notesCount) {
+        notesCount.textContent = `${notasTextarea.value.length}/500`;
+    }
+    
+    // Remove validation classes
+    form.classList.remove('was-validated');
+    formElements.forEach(element => {
+        element.classList.remove('is-valid', 'is-invalid');
+    });
+    
+    // Toggle academic fields
+    const tipo = tipoSelect.value;
+    const studentFields = document.getElementById('studentFields');
+    const professorFields = document.getElementById('professorFields');
+    
+    if (tipo === 'aluno') {
+        studentFields.classList.remove('d-none');
+        professorFields.classList.add('d-none');
+    } else if (tipo === 'professor') {
+        studentFields.classList.add('d-none');
+        professorFields.classList.remove('d-none');
+    } else {
+        studentFields.classList.add('d-none');
+        professorFields.classList.add('d-none');
+    }
+}
+
+// Confirm delete
+function confirmDelete() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Warn about unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    const form = document.getElementById('editUserForm');
+    const formElements = form.querySelectorAll('input, select, textarea');
+    let hasChanges = false;
+    
+    formElements.forEach(element => {
+        if (originalValues.hasOwnProperty(element.name)) {
+            let currentValue;
+            if (element.type === 'checkbox') {
+                currentValue = element.checked;
+            } else {
+                currentValue = element.value;
+            }
+            
+            if (currentValue !== originalValues[element.name]) {
+                hasChanges = true;
+            }
+        }
+    });
+    
+    if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = 'Tem alterações não guardadas. Tem certeza de que deseja sair?';
+        return e.returnValue;
+    }
+});
+</script>
+{% endblock %} 

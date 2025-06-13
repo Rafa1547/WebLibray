@@ -1,0 +1,677 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitar Empréstimo - {{ livro.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('livros.ver_livros') }}">Catálogo</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('livros.detalhes_livro', id=livro.id) }}">{{ livro.titulo }}</a></li>
+                <li class="breadcrumb-item active">Solicitar Empréstimo</li>
+            </ol>
+        </nav>
+        <h1 class="page-title">
+            <i class="fas fa-handshake"></i>
+            Solicitar Empréstimo
+        </h1>
+        <p class="page-subtitle">Confirme os detalhes do seu empréstimo</p>
+    </div>
+    
+    <div class="row">
+        <!-- Book Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="book-card">
+                <div class="book-cover">
+                    {% if livro.capa %}
+                        <img src="{{ url_for('static', filename=livro.capa) }}" alt="{{ livro.titulo }}">
+                    {% else %}
+                        <div class="cover-placeholder">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="book-info">
+                    <h3>{{ livro.titulo }}</h3>
+                    <p class="author">por {{ livro.autor }}</p>
+                    <p class="category">{{ livro.categoria }}</p>
+                    {% if livro.descricao %}
+                    <p class="description">{{ livro.descricao[:100] }}{% if livro.descricao|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+                <div class="book-status">
+                    <span class="status-badge status-disponivel">
+                        <i class="fas fa-check-circle"></i>
+                        Disponível
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loan Request Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-clipboard-list"></i>
+                        Detalhes do Empréstimo
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('emprestimos.solicitar_emprestimo', livro_id=livro.id) }}" id="loanForm">
+                        <!-- User Information -->
+                        <div class="section">
+                            <h4 class="section-title">
+                                <i class="fas fa-user"></i>
+                                Seus Dados
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <label class="info-label">Nome</label>
+                                        <div class="info-value">{{ session.user_name }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <label class="info-label">Tipo de Utilizador</label>
+                                        <div class="info-value">
+                                            <span class="user-type-badge user-type-{{ session.user_type }}">
+                                                <i class="fas fa-{% if session.user_type == 'admin' %}user-shield{% elif session.user_type == 'professor' %}chalkboard-teacher{% else %}user-graduate{% endif %}"></i>
+                                                {{ session.user_type.title() }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Loan Details -->
+                        <div class="section">
+                            <h4 class="section-title">
+                                <i class="fas fa-calendar"></i>
+                                Período do Empréstimo
+                            </h4>
+                            <div class="loan-period-info">
+                                <div class="period-card">
+                                    <div class="period-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="period-content">
+                                        <h5>Período Padrão</h5>
+                                        <p class="period-duration">
+                                            {% if session.user_type == 'professor' %}
+                                                30 dias
+                                            {% else %}
+                                                15 dias
+                                            {% endif %}
+                                        </p>
+                                        <p class="period-description">
+                                            {% if session.user_type == 'professor' %}
+                                                Como professor, você tem direito a um período estendido de empréstimo.
+                                            {% else %}
+                                                Período padrão para alunos. Pode ser renovado uma vez.
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="loan-dates">
+                                    <div class="date-item">
+                                        <label class="date-label">Data de Empréstimo</label>
+                                        <div class="date-value">{{ data_emprestimo }}</div>
+                                    </div>
+                                    <div class="date-item">
+                                        <label class="date-label">Data de Devolução</label>
+                                        <div class="date-value">{{ data_devolucao }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Current Loans -->
+                        {% if emprestimos_atuais %}
+                        <div class="section">
+                            <h4 class="section-title">
+                                <i class="fas fa-list"></i>
+                                Seus Empréstimos Atuais ({{ emprestimos_atuais|length }}/3)
+                            </h4>
+                            <div class="current-loans">
+                                {% for emprestimo in emprestimos_atuais %}
+                                <div class="loan-item {% if emprestimo.em_atraso %}overdue{% endif %}">
+                                    <div class="loan-book-info">
+                                        <strong>{{ emprestimo.titulo }}</strong>
+                                        <small class="text-muted">{{ emprestimo.autor }}</small>
+                                    </div>
+                                    <div class="loan-status">
+                                        {% if emprestimo.em_atraso %}
+                                            <span class="text-danger">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                {{ emprestimo.dias_atraso }} dias em atraso
+                                            </span>
+                                        {% else %}
+                                            <span class="text-success">
+                                                <i class="fas fa-calendar-check"></i>
+                                                {{ emprestimo.dias_restantes }} dias restantes
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Terms and Conditions -->
+                        <div class="section">
+                            <h4 class="section-title">
+                                <i class="fas fa-file-contract"></i>
+                                Termos e Condições
+                            </h4>
+                            <div class="terms-box">
+                                <ul class="terms-list">
+                                    <li>
+                                        <i class="fas fa-check text-success"></i>
+                                        O livro deve ser devolvido até à data limite para evitar multas.
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check text-success"></i>
+                                        Pode renovar o empréstimo uma vez, desde que não haja reservas.
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check text-success"></i>
+                                        Máximo de 3 livros emprestados simultaneamente.
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check text-success"></i>
+                                        Danos ao livro podem resultar em taxa de reposição.
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check text-success"></i>
+                                        {% if session.user_type == 'professor' %}
+                                            Período de empréstimo: 30 dias (renovável por mais 30).
+                                        {% else %}
+                                            Período de empréstimo: 15 dias (renovável por mais 15).
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                                
+                                <div class="agreement-checkbox">
+                                    <div class="custom-checkbox">
+                                        <input type="checkbox" id="aceitar_termos" name="aceitar_termos" required>
+                                        <label for="aceitar_termos">
+                                            <i class="fas fa-check"></i>
+                                            Concordo com os termos e condições do empréstimo
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="section">
+                            <h4 class="section-title">
+                                <i class="fas fa-sticky-note"></i>
+                                Observações (Opcional)
+                            </h4>
+                            <div class="form-group">
+                                <textarea name="observacoes" 
+                                          class="form-control" 
+                                          rows="3" 
+                                          placeholder="Adicione alguma observação sobre este empréstimo (opcional)"></textarea>
+                                <small class="form-text text-muted">
+                                    Máximo de 200 caracteres. <span id="char-count">0/200</span>
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success btn-lg" id="confirmLoan" disabled>
+                                <i class="fas fa-handshake"></i>
+                                Confirmar Empréstimo
+                            </button>
+                            <a href="{{ url_for('livros.detalhes_livro', id=livro.id) }}" class="btn btn-outline btn-lg">
+                                <i class="fas fa-arrow-left"></i>
+                                Voltar ao Livro
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: #6c757d;
+}
+
+.breadcrumb-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.book-card {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: sticky;
+    top: 2rem;
+}
+
+.book-cover {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-gray);
+}
+
+.book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cover-placeholder {
+    color: #6c757d;
+    font-size: 4rem;
+}
+
+.book-info {
+    padding: 1.5rem;
+}
+
+.book-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--accent-1);
+    font-weight: 600;
+}
+
+.book-info .author {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin: 0 0 0.5rem 0;
+}
+
+.book-info .category {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 0 0 1rem 0;
+}
+
+.book-info .description {
+    color: #495057;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.book-status {
+    padding: 1rem 1.5rem;
+    background: var(--light-gray);
+    text-align: center;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-disponivel {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--accent-1);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-item {
+    margin-bottom: 1rem;
+}
+
+.info-label {
+    display: block;
+    font-weight: 600;
+    color: var(--accent-1);
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.info-value {
+    color: #495057;
+}
+
+.user-type-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--border-radius);
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.user-type-admin {
+    background: rgba(62, 142, 222, 0.1);
+    color: var(--primary-color);
+}
+
+.user-type-professor {
+    background: rgba(81, 196, 211, 0.1);
+    color: var(--accent-3);
+}
+
+.user-type-aluno {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.loan-period-info {
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+}
+
+.period-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.period-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.5rem;
+}
+
+.period-content h5 {
+    margin: 0 0 0.25rem 0;
+    color: var(--accent-1);
+}
+
+.period-duration {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0 0 0.5rem 0;
+}
+
+.period-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.loan-dates {
+    display: flex;
+    gap: 2rem;
+}
+
+.date-item {
+    flex: 1;
+}
+
+.date-label {
+    display: block;
+    font-weight: 600;
+    color: var(--accent-1);
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.date-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.current-loans {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.loan-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+}
+
+.loan-item.overdue {
+    border-left: 4px solid #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+}
+
+.terms-box {
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+}
+
+.terms-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+
+.terms-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.terms-list li:last-child {
+    margin-bottom: 0;
+}
+
+.agreement-checkbox {
+    padding: 1rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    border: 2px solid #dee2e6;
+}
+
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+}
+
+.custom-checkbox input {
+    margin-right: 0.75rem;
+    transform: scale(1.2);
+}
+
+.custom-checkbox label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--accent-1);
+}
+
+.custom-checkbox label i {
+    margin-right: 0.5rem;
+    color: var(--success-color);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #dee2e6;
+}
+
+#char-count {
+    font-weight: 500;
+}
+
+@media (max-width: 992px) {
+    .book-card {
+        position: static;
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .loan-dates {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .period-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .loan-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loanForm');
+    const aceitarTermos = document.getElementById('aceitar_termos');
+    const confirmButton = document.getElementById('confirmLoan');
+    const observacoesTextarea = document.querySelector('textarea[name="observacoes"]');
+    const charCount = document.getElementById('char-count');
+    
+    // Enable/disable confirm button based on terms acceptance
+    aceitarTermos.addEventListener('change', function() {
+        confirmButton.disabled = !this.checked;
+        if (this.checked) {
+            confirmButton.classList.remove('btn-secondary');
+            confirmButton.classList.add('btn-success');
+        } else {
+            confirmButton.classList.remove('btn-success');
+            confirmButton.classList.add('btn-secondary');
+        }
+    });
+    
+    // Character count for observations
+    if (observacoesTextarea && charCount) {
+        observacoesTextarea.addEventListener('input', function() {
+            const current = this.value.length;
+            const max = 200;
+            charCount.textContent = `${current}/${max}`;
+            
+            if (current > max) {
+                charCount.style.color = '#dc3545';
+                this.value = this.value.substring(0, max);
+                charCount.textContent = `${max}/${max}`;
+            } else {
+                charCount.style.color = '';
+            }
+        });
+    }
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        if (!aceitarTermos.checked) {
+            e.preventDefault();
+            alert('Deve aceitar os termos e condições para prosseguir.');
+            return;
+        }
+        
+        // Show loading state
+        confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+        confirmButton.disabled = true;
+        
+        // Re-enable after some time in case of error
+        setTimeout(() => {
+            confirmButton.innerHTML = '<i class="fas fa-handshake"></i> Confirmar Empréstimo';
+            confirmButton.disabled = false;
+        }, 10000);
+    });
+    
+    // Animate sections on load
+    const sections = document.querySelectorAll('.section');
+    sections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            section.style.transition = 'all 0.6s ease';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, 200 + (100 * index));
+    });
+    
+    // Highlight overdue loans
+    const overdueLoans = document.querySelectorAll('.loan-item.overdue');
+    if (overdueLoans.length > 0) {
+        const warningMessage = document.createElement('div');
+        warningMessage.className = 'alert alert-warning';
+        warningMessage.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Atenção:</strong> Você possui ${overdueLoans.length} empréstimo(s) em atraso. 
+            Devolva os livros em atraso antes de fazer novos empréstimos.
+        `;
+        
+        const firstSection = document.querySelector('.section');
+        firstSection.parentNode.insertBefore(warningMessage, firstSection);
+    }
+});
+</script>
+{% endblock %} 

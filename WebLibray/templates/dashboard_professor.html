@@ -1,0 +1,737 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Professor - Biblioteca{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-chalkboard-teacher"></i>
+            Olá, Professor {{ session.user_name.split()[0] }}!
+        </h1>
+        <p class="page-subtitle">Bem-vindo ao seu painel de controlo da biblioteca</p>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon books">
+                    <i class="fas fa-books"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ stats.total_livros }}</h3>
+                    <p>Livros Disponíveis</p>
+                    <small class="text-muted">{{ stats.livros_disponiveis }} disponíveis agora</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon loans">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ stats.meus_emprestimos }}</h3>
+                    <p>Meus Empréstimos</p>
+                    <small class="text-muted">{{ stats.emprestimos_ativos }} ativos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon reading">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ stats.livros_lidos }}</h3>
+                    <p>Livros Lidos</p>
+                    <small class="text-muted text-success">Este ano</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon recommendations">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ stats.novas_recomendacoes }}</h3>
+                    <p>Novas Recomendações</p>
+                    <small class="text-muted">Baseadas no seu interesse</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Current Loans -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-clock"></i>
+                        Meus Empréstimos Ativos
+                    </h3>
+                    <div class="card-actions">
+                        <a href="{{ url_for('profile.meus_emprestimos') }}" class="btn btn-outline btn-sm">
+                            Ver Todos
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if emprestimos_ativos %}
+                    <div class="loans-list">
+                        {% for emprestimo in emprestimos_ativos %}
+                        <div class="loan-item {% if emprestimo.em_atraso %}overdue{% endif %}">
+                            <div class="loan-book">
+                                <div class="book-cover-small">
+                                    {% if emprestimo.capa %}
+                                        <img src="{{ url_for('static', filename=emprestimo.capa) }}" alt="{{ emprestimo.titulo }}">
+                                    {% else %}
+                                        <div class="cover-placeholder">
+                                            <i class="fas fa-book"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="book-info">
+                                    <h4>{{ emprestimo.titulo }}</h4>
+                                    <p class="author">{{ emprestimo.autor }}</p>
+                                    <p class="category">{{ emprestimo.categoria }}</p>
+                                </div>
+                            </div>
+                            <div class="loan-dates">
+                                <div class="loan-date">
+                                    <span class="date-label">Emprestado:</span>
+                                    <span class="date-value">{{ emprestimo.data_emprestimo.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                                <div class="loan-date">
+                                    <span class="date-label">Devolução:</span>
+                                    <span class="date-value {% if emprestimo.em_atraso %}text-danger{% endif %}">
+                                        {{ emprestimo.data_limite.strftime('%d/%m/%Y') }}
+                                    </span>
+                                </div>
+                                {% if emprestimo.em_atraso %}
+                                <div class="overdue-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    {{ emprestimo.dias_atraso }} dias em atraso
+                                </div>
+                                {% else %}
+                                <div class="days-remaining">
+                                    <i class="fas fa-calendar-check"></i>
+                                    {{ emprestimo.dias_restantes }} dias restantes
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="loan-actions">
+                                {% if emprestimo.pode_renovar %}
+                                <form method="POST" action="{{ url_for('emprestimos.renovar_emprestimo', id=emprestimo.id) }}">
+                                    <button type="submit" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-redo"></i> Renovar
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('livros.detalhes_livro', id=emprestimo.livro_id) }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i> Ver Livro
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                        <h4>Nenhum empréstimo ativo</h4>
+                        <p class="text-muted">Explore nosso catálogo e faça um empréstimo!</p>
+                        <a href="{{ url_for('livros.ver_livros') }}" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Explorar Catálogo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-history"></i>
+                        Atividade Recente
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if atividades %}
+                    <div class="activity-timeline">
+                        {% for atividade in atividades %}
+                        <div class="activity-item">
+                            <div class="activity-icon activity-{{ atividade.tipo }}">
+                                <i class="fas fa-{{ atividade.icone }}"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h5>{{ atividade.titulo }}</h5>
+                                <p>{{ atividade.descricao }}</p>
+                                <small class="text-muted">{{ atividade.data_formatada }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Nenhuma atividade recente</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-bolt"></i>
+                        Ações Rápidas
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions">
+                        <a href="{{ url_for('livros.ver_livros') }}" class="quick-action">
+                            <div class="action-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="action-content">
+                                <h4>Pesquisar Livros</h4>
+                                <p>Encontre livros no catálogo</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{{ url_for('profile.meus_emprestimos') }}" class="quick-action">
+                            <div class="action-icon">
+                                <i class="fas fa-list"></i>
+                            </div>
+                            <div class="action-content">
+                                <h4>Meus Empréstimos</h4>
+                                <p>Veja todos os seus empréstimos</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{{ url_for('profile.historico_emprestimos') }}" class="quick-action">
+                            <div class="action-icon">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="action-content">
+                                <h4>Histórico</h4>
+                                <p>Veja seu histórico completo</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{{ url_for('profile.perfil') }}" class="quick-action">
+                            <div class="action-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="action-content">
+                                <h4>Meu Perfil</h4>
+                                <p>Atualize suas informações</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommendations -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-lightbulb"></i>
+                        Recomendações para Você
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if recomendacoes %}
+                    <div class="recommendations-list">
+                        {% for livro in recomendacoes %}
+                        <div class="recommendation-item">
+                            <div class="book-cover-mini">
+                                {% if livro.capa %}
+                                    <img src="{{ url_for('static', filename=livro.capa) }}" alt="{{ livro.titulo }}">
+                                {% else %}
+                                    <div class="cover-placeholder">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="book-details">
+                                <h5>{{ livro.titulo }}</h5>
+                                <p class="author">{{ livro.autor }}</p>
+                                <p class="category">{{ livro.categoria }}</p>
+                                <div class="recommendation-actions">
+                                    <a href="{{ url_for('livros.detalhes_livro', id=livro.id) }}" class="btn btn-primary btn-sm">
+                                        Ver Detalhes
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-lightbulb fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Nenhuma recomendação disponível</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Library Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Estatísticas da Biblioteca
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="library-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Total de Livros</div>
+                            <div class="stat-value">{{ stats_biblioteca.total_livros }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Livros Disponíveis</div>
+                            <div class="stat-value text-success">{{ stats_biblioteca.livros_disponiveis }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Livros Emprestados</div>
+                            <div class="stat-value text-warning">{{ stats_biblioteca.livros_emprestados }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Utilizadores Ativos</div>
+                            <div class="stat-value text-info">{{ stats_biblioteca.utilizadores_ativos }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-title i {
+    color: var(--accent-3);
+    margin-right: 0.5rem;
+}
+
+.stats-card {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+    height: 100%;
+}
+
+.stats-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: var(--white);
+}
+
+.stats-icon.books { background: var(--primary-color); }
+.stats-icon.loans { background: var(--accent-3); }
+.stats-icon.reading { background: var(--success-color); }
+.stats-icon.recommendations { background: var(--accent-2); }
+
+.stats-content h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--accent-1);
+}
+
+.stats-content p {
+    margin: 0.25rem 0 0 0;
+    color: var(--accent-1);
+    font-weight: 500;
+}
+
+.stats-content small {
+    font-size: 0.8rem;
+}
+
+.loans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.loan-item {
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+}
+
+.loan-item:hover {
+    background: #e9ecef;
+}
+
+.loan-item.overdue {
+    border-left: 4px solid #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+}
+
+.loan-book {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.book-cover-small {
+    width: 60px;
+    height: 80px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.book-cover-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1.5rem;
+}
+
+.book-info h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-1);
+}
+
+.book-info .author {
+    margin: 0.25rem 0;
+    color: var(--primary-color);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.book-info .category {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.loan-dates {
+    text-align: center;
+    min-width: 120px;
+}
+
+.loan-date {
+    margin-bottom: 0.5rem;
+}
+
+.date-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.date-value {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.overdue-warning {
+    color: #dc3545;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.days-remaining {
+    color: var(--success-color);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.loan-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.activity-timeline {
+    position: relative;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: var(--white);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.activity-emprestimo { background: var(--primary-color); }
+.activity-devolucao { background: var(--success-color); }
+.activity-renovacao { background: var(--accent-2); }
+.activity-atraso { background: #dc3545; }
+
+.activity-content h5 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+}
+
+.activity-content p {
+    margin: 0 0 0.25rem 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.quick-action {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition);
+}
+
+.quick-action:hover {
+    background: #e9ecef;
+    color: inherit;
+    text-decoration: none;
+    transform: translateX(5px);
+}
+
+.action-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--primary-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    margin-right: 1rem;
+    font-size: 1.2rem;
+}
+
+.action-content h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-1);
+}
+
+.action-content p {
+    margin: 0.25rem 0 0 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.recommendation-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+}
+
+.book-cover-mini {
+    width: 40px;
+    height: 55px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.book-cover-mini img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-cover-mini .cover-placeholder {
+    font-size: 1rem;
+}
+
+.book-details h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent-1);
+}
+
+.book-details .author {
+    margin: 0.25rem 0;
+    color: var(--primary-color);
+    font-size: 0.85rem;
+}
+
+.book-details .category {
+    margin: 0 0 0.5rem 0;
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.library-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+@media (max-width: 768px) {
+    .loan-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .loan-book {
+        width: 100%;
+    }
+    
+    .loan-dates {
+        width: 100%;
+        text-align: left;
+        margin: 1rem 0;
+    }
+    
+    .loan-actions {
+        width: 100%;
+        flex-direction: row;
+    }
+    
+    .quick-action {
+        padding: 0.75rem;
+    }
+    
+    .action-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards on load
+    const cards = document.querySelectorAll('.card, .stats-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * (index % 6)); // Stagger animation
+    });
+    
+    // Auto-refresh stats every 5 minutes
+    setInterval(() => {
+        // This would update stats via AJAX in a real implementation
+        console.log('Refreshing stats...');
+    }, 300000);
+    
+    // Highlight overdue loans
+    const overdueLoans = document.querySelectorAll('.loan-item.overdue');
+    overdueLoans.forEach(loan => {
+        loan.style.animation = 'pulse 2s infinite';
+    });
+});
+
+// Add pulse animation for overdue items
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 

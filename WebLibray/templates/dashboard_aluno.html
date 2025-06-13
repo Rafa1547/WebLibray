@@ -1,0 +1,484 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Aluno - Biblioteca{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Olá, {{ session.user_name }}! 👋</h1>
+        <p class="page-subtitle">Bem-vindo ao seu painel de controlo da biblioteca</p>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-book-reader"></i>
+            </div>
+            <div class="stat-number">{{ emprestimos_ativos|length }}</div>
+            <div class="stat-label">Livros Emprestados</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-number">{{ 3 - emprestimos_ativos|length }}</div>
+            <div class="stat-label">Empréstimos Disponíveis</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <div class="stat-number">{{ emprestimos_ativos|length + 5 }}</div>
+            <div class="stat-label">Total Emprestados</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-number">4.8</div>
+            <div class="stat-label">Avaliação Média</div>
+        </div>
+    </div>
+    
+    <!-- Current Loans -->
+    {% if emprestimos_ativos %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Meus Empréstimos Ativos</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for emprestimo in emprestimos_ativos %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="loan-card">
+                                <div class="loan-cover">
+                                    {% if emprestimo[7] %}
+                                        <img src="{{ url_for('static', filename=emprestimo[7]) }}" alt="{{ emprestimo[5] }}">
+                                    {% else %}
+                                        <div class="cover-placeholder">
+                                            <i class="fas fa-book"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="loan-info">
+                                    <h4>{{ emprestimo[5] }}</h4>
+                                    <p>{{ emprestimo[6] }}</p>
+                                    <div class="loan-dates">
+                                        <small>Emprestado: {{ emprestimo[3].strftime('%d/%m/%Y') if emprestimo[3] else 'N/A' }}</small>
+                                        <small>Devolução: {{ emprestimo[4].strftime('%d/%m/%Y') if emprestimo[4] else 'N/A' }}</small>
+                                    </div>
+                                    <div class="loan-actions">
+                                        <form method="POST" action="{{ url_for('emprestimos.renovar_emprestimo', emprestimo_id=emprestimo[0]) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-secondary">
+                                                <i class="fas fa-redo"></i> Renovar
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('emprestimos.devolver_livro', emprestimo_id=emprestimo[0]) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check"></i> Devolver
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Ações Rápidas</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('livros.ver_livros') }}" class="action-card">
+                                <div class="action-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h4>Procurar Livros</h4>
+                                    <p>Explore nosso catálogo</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('emprestimos.ver_emprestimos') }}" class="action-card">
+                                <div class="action-icon">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h4>Meu Histórico</h4>
+                                    <p>Ver empréstimos anteriores</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('profile.perfil') }}" class="action-card">
+                                <div class="action-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h4>Meu Perfil</h4>
+                                    <p>Gerir dados pessoais</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('profile.livros_favoritos') }}" class="action-card">
+                                <div class="action-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h4>Favoritos</h4>
+                                    <p>Livros que gosto</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Lembretes</h3>
+                </div>
+                <div class="card-body">
+                    <div class="reminder-list">
+                        {% if emprestimos_ativos %}
+                            {% for emprestimo in emprestimos_ativos %}
+                                {% if emprestimo[4] %}
+                                    {% set days_left = (emprestimo[4] - today).days if emprestimo[4] > today else 0 %}
+                                    <div class="reminder-item {% if days_left <= 2 %}urgent{% elif days_left <= 5 %}warning{% endif %}">
+                                        <div class="reminder-icon">
+                                            <i class="fas fa-{% if days_left <= 2 %}exclamation-triangle{% elif days_left <= 5 %}clock{% else %}calendar{% endif %}"></i>
+                                        </div>
+                                        <div class="reminder-content">
+                                            <p><strong>{{ emprestimo[5][:20] }}...</strong></p>
+                                            <small>
+                                                {% if days_left > 0 %}
+                                                    Devolução em {{ days_left }} dia{% if days_left != 1 %}s{% endif %}
+                                                {% else %}
+                                                    Em atraso!
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="reminder-item">
+                                <div class="reminder-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="reminder-content">
+                                    <p>Não tem empréstimos ativos</p>
+                                    <small>Que tal procurar um livro novo?</small>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Books -->
+    {% if livros_recentes %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Livros Recentemente Adicionados</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for livro in livros_recentes %}
+                        <div class="col-md-2 col-sm-4 col-6 mb-3">
+                            <div class="book-card" data-href="{{ url_for('livros.detalhes_livro', id=livro[0]) }}">
+                                <div class="book-cover">
+                                    {% if livro[5] %}
+                                        <img src="{{ url_for('static', filename=livro[5]) }}" alt="{{ livro[1] }}">
+                                    {% else %}
+                                        <div class="cover-placeholder">
+                                            <i class="fas fa-book"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="book-info">
+                                    <h5>{{ livro[1][:15] }}{% if livro[1]|length > 15 %}...{% endif %}</h5>
+                                    <p>{{ livro[2] }}</p>
+                                    <span class="badge badge-{% if livro[6] == 'disponivel' %}success{% else %}warning{% endif %}">
+                                        {{ 'Disponível' if livro[6] == 'disponivel' else 'Emprestado' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.loan-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.loan-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.loan-cover {
+    height: 120px;
+    overflow: hidden;
+    background: var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loan-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cover-placeholder {
+    color: #6c757d;
+    font-size: 2rem;
+}
+
+.loan-info {
+    padding: 1rem;
+}
+
+.loan-info h4 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--accent-1);
+}
+
+.loan-info p {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.loan-dates {
+    margin-bottom: 1rem;
+}
+
+.loan-dates small {
+    display: block;
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+.loan-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-card {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--white);
+    border: 2px solid #e9ecef;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: var(--accent-1);
+    transition: var(--transition);
+}
+
+.action-card:hover {
+    border-color: var(--primary-color);
+    background: rgba(62, 142, 222, 0.05);
+    text-decoration: none;
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.action-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-3));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.25rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.action-content h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.action-content p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.reminder-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.reminder-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--border-radius);
+    background: var(--light-gray);
+}
+
+.reminder-item.warning {
+    background: rgba(255, 193, 7, 0.1);
+    border-left: 4px solid var(--warning);
+}
+
+.reminder-item.urgent {
+    background: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid var(--danger);
+}
+
+.reminder-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+    font-size: 0.875rem;
+}
+
+.reminder-item.warning .reminder-icon {
+    background: var(--warning);
+    color: var(--accent-1);
+}
+
+.reminder-item.urgent .reminder-icon {
+    background: var(--danger);
+}
+
+.reminder-content p {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.875rem;
+    color: var(--accent-1);
+}
+
+.reminder-content small {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+.book-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.book-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-3px);
+}
+
+.book-cover {
+    height: 160px;
+    overflow: hidden;
+    background: var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-info {
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.book-info h5 {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    color: var(--accent-1);
+}
+
+.book-info p {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handler for book cards
+    const bookCards = document.querySelectorAll('.book-card[data-href]');
+    bookCards.forEach(card => {
+        card.addEventListener('click', function() {
+            window.location.href = this.dataset.href;
+        });
+    });
+    
+    // Animate stat cards
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+});
+</script>
+{% endblock %} 
