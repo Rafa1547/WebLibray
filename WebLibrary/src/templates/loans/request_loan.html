@@ -1,0 +1,291 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Solicitar Requisição - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                            <h1 class="h3 mb-0">Solicitar Requisição</h1>
+        <p class="text-muted">Solicitar requisição do livro "{{ livro.titulo }}"</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('books.details', livro_id=livro.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar aos Detalhes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações do Livro -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>Livro Selecionado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="book-info">
+                        <div class="book-cover mb-3 text-center">
+                            <img src="{{ livro.capa_url if livro.capa_url else '/static/images/covers/placeholder.jpg' }}" 
+                                 alt="Capa de {{ livro.titulo }}" class="img-fluid rounded" style="max-height: 200px;">
+                        </div>
+                        <h6 class="fw-bold">{{ livro.titulo }}</h6>
+                        <p class="text-muted mb-2">por {{ livro.autor }}</p>
+                        <div class="mb-2">
+                            <span class="badge bg-primary">{{ livro.categoria }}</span>
+                        </div>
+                        <div class="book-details">
+                            <small class="text-muted">
+                                <div><strong>ISBN:</strong> {{ livro.isbn or 'N/A' }}</div>
+                                <div><strong>Ano:</strong> {{ livro.ano or 'N/A' }}</div>
+                                <div><strong>Páginas:</strong> {{ livro.paginas or 'N/A' }}</div>
+                                <div><strong>Localização:</strong> {{ livro.localizacao or 'N/A' }}</div>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de Empréstimo -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-handshake me-2"></i>Dados do Empréstimo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if livro.status == 'disponivel' %}
+                    <form method="POST" action="{{ url_for('loans.request_loan', livro_id=livro.id) }}">
+                        <!-- Informações do Utilizador -->
+                        <div class="mb-4">
+                            <h6 class="text-primary">
+                                <i class="fas fa-user me-2"></i>Informações do Utilizador
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="nome" class="form-label">Nome Completo</label>
+                                        <input type="text" class="form-control" id="nome" name="nome" 
+                                               value="{{ session.user_name or '' }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               value="{{ user_email or 'Email não disponível' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Período do Empréstimo -->
+                        <div class="mb-4">
+                            <h6 class="text-primary">
+                                <i class="fas fa-calendar me-2"></i>Período do Empréstimo
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="data_emprestimo" class="form-label">Data de Empréstimo</label>
+                                        <input type="date" class="form-control" id="data_emprestimo" name="data_emprestimo" 
+                                               value="{{ today }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="data_devolucao" class="form-label">Data de Devolução Prevista</label>
+                                        <input type="date" class="form-control" id="data_devolucao" name="data_devolucao" 
+                                               value="{{ data_devolucao_prevista }}" readonly>
+                                        <div class="form-text">Prazo padrão: 14 dias</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="mb-4">
+                            <label for="observacoes" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Observações (opcional)
+                            </label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="3" 
+                                                                              placeholder="Adicione qualquer observação sobre esta requisição..."></textarea>
+                        </div>
+
+                        <!-- Termos e Condições -->
+                        <div class="mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle me-2"></i>Termos e Condições
+                                    </h6>
+                                    <ul class="mb-3">
+                                        <li>O prazo de requisição é de 14 dias a partir da data de retirada</li>
+                                        <li>Renovações podem ser solicitadas antes do vencimento</li>
+                                        <li>Multas por atraso: €0.50 por dia</li>
+                                        <li>O utilizador é responsável pela conservação do livro</li>
+                                        <li>Danos ou perda do livro resultam em cobrança do valor integral</li>
+                                    </ul>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="aceitar_termos" name="aceitar_termos" required>
+                                        <label class="form-check-label" for="aceitar_termos">
+                                            Aceito os termos e condições da requisição
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('books.details', livro_id=livro.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-handshake me-2"></i>Confirmar Empréstimo
+                            </button>
+                        </div>
+                    </form>
+
+                    {% else %}
+                    <!-- Livro Indisponível -->
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Livro Indisponível
+                        </h5>
+                        <p class="mb-0">
+                            Este livro não está disponível para requisição no momento. 
+                            Status atual: <strong>{{ livro.status|title }}</strong>
+                        </p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Procurar Outros Livros
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Empréstimos do Utilizador -->
+    {% if emprestimos_utilizador %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Seus Empréstimos Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Livro</th>
+                                    <th>Data Requisição</th>
+                                    <th>Data Devolução</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emprestimo in emprestimos_utilizador %}
+                                <tr>
+                                    <td>{{ emprestimo.titulo_livro }}</td>
+                                    <td>{{ emprestimo.data_emprestimo|datetime('%d/%m/%Y') }}</td>
+                                    <td>{{ emprestimo.data_devolucao_real|datetime('%d/%m/%Y') if emprestimo.data_devolucao_real else 'Pendente' }}</td>
+                                    <td>
+                                        {% if emprestimo.status == 'ativo' %}
+                                        <span class="badge bg-warning">Ativo</span>
+                                        {% elif emprestimo.status == 'devolvido' %}
+                                        <span class="badge bg-success">Devolvido</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Atrasado</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.book-info .book-cover img {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.book-details div {
+    margin-bottom: 0.25rem;
+}
+
+.card.bg-light {
+    border-left: 4px solid var(--primary-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .d-flex.justify-content-between .btn {
+        width: 48%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validação do formulário
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const aceitarTermos = document.getElementById('aceitar_termos');
+            
+            if (!aceitarTermos.checked) {
+                e.preventDefault();
+                alert('Deve aceitar os termos e condições para prosseguir com a requisição.');
+                aceitarTermos.focus();
+                return false;
+            }
+        });
+    }
+
+    // Animação de entrada
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+});
+</script>
+{% endblock %}
+

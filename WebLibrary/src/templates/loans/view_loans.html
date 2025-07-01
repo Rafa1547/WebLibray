@@ -1,0 +1,392 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Minhas Requisições - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        {% if session.user_type == 'admin' %}
+                                        Gestão de Requisições
+            {% else %}
+                Minhas Requisições
+                        {% endif %}
+                    </h1>
+                    <p class="text-muted">
+                        {% if session.user_type == 'admin' %}
+                                        Visualize e gerencie todas as requisições do sistema
+            {% else %}
+                Acompanhe o histórico e status das suas requisições
+                        {% endif %}
+                    </p>
+                </div>
+                {% if session.user_type == 'admin' %}
+                <div>
+                                    <a href="{{ url_for('books.catalog') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Nova Requisição
+                </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-book-reader text-primary"></i>
+                </div>
+                <div class="stats-number">{{ stats.ativos }}</div>
+                <div class="stats-label">Requisições Ativas</div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-check-circle text-success"></i>
+                </div>
+                <div class="stats-number">{{ stats.devolvidos }}</div>
+                <div class="stats-label">Devolvidos</div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                </div>
+                <div class="stats-number">{{ stats.atrasados }}</div>
+                <div class="stats-label">Atrasados</div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-history text-info"></i>
+                </div>
+                <div class="stats-number">{{ stats.total }}</div>
+                <div class="stats-label">Total de Requisições</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('loans.view_loans') }}" class="row g-3">
+                        <!-- Status Filter -->
+                        <div class="col-lg-3 col-md-6">
+                            <label for="status" class="form-label">
+                                <i class="fas fa-filter me-1"></i>Status
+                            </label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Todos os status</option>
+                                <option value="ativo" {% if status_filter == 'ativo' %}selected{% endif %}>Ativo</option>
+                                <option value="devolvido" {% if status_filter == 'devolvido' %}selected{% endif %}>Devolvido</option>
+                                <option value="atrasado" {% if status_filter == 'atrasado' %}selected{% endif %}>Atrasado</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Date Range -->
+                        <div class="col-lg-3 col-md-6">
+                            <label for="data_inicio" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Data Início
+                            </label>
+                            <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ data_inicio }}">
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6">
+                            <label for="data_fim" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Data Fim
+                            </label>
+                            <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ data_fim }}">
+                        </div>
+                        
+                        {% if session.user_type == 'admin' %}
+                        <!-- User Filter (Admin only) -->
+                        <div class="col-lg-3 col-md-6">
+                            <label for="utilizador" class="form-label">
+                                <i class="fas fa-user me-1"></i>Utilizador
+                            </label>
+                            <input type="text" class="form-control" id="utilizador" name="utilizador" 
+                                   placeholder="Nome do utilizador" value="{{ utilizador }}">
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Submit Button -->
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                            <a href="{{ url_for('loans.view_loans') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-undo me-1"></i>Limpar Filtros
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loans Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Lista de Requisições
+                        </h5>
+                        <div>
+                            <span class="text-muted">{{ emprestimos|length }} de {{ total_records }} registos</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if emprestimos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    {% if session.user_type == 'admin' %}
+                                    <th>Utilizador</th>
+                                    {% endif %}
+                                    <th>Livro</th>
+                                    <th>Data Requisição</th>
+                                    <th>Data Devolução Prevista</th>
+                                    <th>Data Devolução Real</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emprestimo in emprestimos %}
+                                <tr>
+                                    {% if session.user_type == 'admin' %}
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-circle fa-lg text-muted me-2"></i>
+                                            <div>
+                                                <div class="fw-bold">{{ emprestimo.nome_utilizador }}</div>
+                                                <small class="text-muted">{{ emprestimo.email_utilizador }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                {% if emprestimo.capa_url %}
+                                                <img src="{{ emprestimo.capa_url }}" alt="Capa" class="img-thumbnail" style="width: 40px; height: 50px; object-fit: cover;">
+                                                {% else %}
+                                                <div class="bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 50px;">
+                                                    <i class="fas fa-book text-muted"></i>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ emprestimo.titulo }}</div>
+                                                <small class="text-muted">{{ emprestimo.autor }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>{{ emprestimo.data_emprestimo|datetime('%d/%m/%Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ emprestimo.data_devolucao_prevista|datetime('%d/%m/%Y') }}</small>
+                                        {% if emprestimo.status == 'ativo' %}
+                                            {% if emprestimo.dias_restantes < 0 %}
+                                            <br><span class="badge bg-danger">{{ emprestimo.dias_restantes|abs }} dias atrasado</span>
+                                            {% elif emprestimo.dias_restantes <= 3 %}
+                                            <br><span class="badge bg-warning">{{ emprestimo.dias_restantes }} dias restantes</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if emprestimo.data_devolucao_real %}
+                                        <small>{{ emprestimo.data_devolucao_real|datetime('%d/%m/%Y') }}</small>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if emprestimo.status == 'ativo' %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% elif emprestimo.status == 'devolvido' %}
+                                        <span class="badge bg-primary">Devolvido</span>
+                                        {% elif emprestimo.status == 'atrasado' %}
+                                        <span class="badge bg-danger">Atrasado</span>
+                                        {% endif %}
+                                        
+                                        {% if emprestimo.renovado %}
+                                        <br><small class="text-info">
+                                            <i class="fas fa-redo me-1"></i>Renovado
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('books.details', livro_id=emprestimo.id_livro) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="Ver livro">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            {% if emprestimo.status == 'ativo' and emprestimo.id %}
+                                                {% if not emprestimo.renovado %}
+                                                <form method="POST" action="{{ url_for('loans.renew_loan', emprestimo_id=emprestimo.id) }}" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-warning" title="Renovar">
+                                                        <i class="fas fa-redo"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                
+                                                <form method="POST" action="{{ url_for('loans.return_loan', emprestimo_id=emprestimo.id) }}" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success" 
+                                                            onclick="return confirm('Confirmar devolução?')" title="Devolver">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            
+                                            <!-- Botão de detalhes disponível para todos os utilizadores -->
+                                            {% if emprestimo.id %}
+                                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                                    data-loan-id="{{ emprestimo.id }}" 
+                                                    onclick="showLoanDetails(this.dataset.loanId)" title="Ver detalhes">
+                                                <i class="fas fa-info"></i>
+                                            </button>
+                                            {% else %}
+                                            <span class="btn btn-sm btn-outline-secondary disabled" title="ID inválido">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if total_pages > 1 %}
+                    <nav aria-label="Navegação de páginas" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <!-- Previous Page -->
+                            {% if has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ build_url(prev_page) }}" aria-label="Anterior">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                            {% endif %}
+                            
+                            <!-- Page Numbers -->
+                            {% for page_num in page_numbers %}
+                                {% if page_num == '...' %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% elif page_num == page %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ build_url(page_num) }}">{{ page_num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <!-- Next Page -->
+                            {% if has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ build_url(next_page) }}" aria-label="Próxima">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">Nenhuma requisição encontrada</h4>
+                        <p class="text-muted">
+                            {% if status_filter or data_inicio or data_fim or utilizador %}
+                            Tente ajustar os filtros de pesquisa.
+                            {% else %}
+                            {% if session.user_type == 'admin' %}
+                                                Nenhuma requisição foi registada no sistema ainda.
+                {% else %}
+                    Você ainda não fez nenhuma requisição.
+                            {% endif %}
+                            {% endif %}
+                        </p>
+                        {% if not (status_filter or data_inicio or data_fim or utilizador) %}
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Explorar Catálogo
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when filters change
+    const filterForm = document.querySelector('form');
+    const filterInputs = filterForm.querySelectorAll('select, input[type="date"]');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // Add a small delay to allow multiple quick changes
+            setTimeout(() => {
+                filterForm.submit();
+            }, 300);
+        });
+    });
+    
+    // Animate stats cards
+    const statsCards = document.querySelectorAll('.stats-card');
+    statsCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in-up');
+        }, 100 * index);
+    });
+});
+
+function showLoanDetails(loanId) {
+    // Redirecionar para a página de detalhes do empréstimo
+    window.location.href = `/loans/emprestimos/${loanId}/detalhes`;
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,644 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard Administrativo - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <h1 class="page-title">Dashboard Administrativo</h1>
+                <p class="page-subtitle">Visão geral do sistema de biblioteca</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-number">{{ total_livros or 6 }}</div>
+            <div class="stat-label">Total de Livros</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number">{{ total_utilizadores or 1 }}</div>
+            <div class="stat-label">Utilizadores</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <div class="stat-number">{{ emprestimos_ativos or 0 }}</div>
+                            <div class="stat-label">Requisições Ativas</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-number">{{ emprestimos_atrasados or 0 }}</div>
+            <div class="stat-label">Em Atraso</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <div class="stat-number" id="total-documentos">0</div>
+            <div class="stat-label">Documentos</div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Ações Rápidas</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('books.add_book') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-plus"></i>
+                                Adicionar Livro
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('admin.add_user') }}" class="btn btn-secondary w-100">
+                                <i class="fas fa-user-plus"></i>
+                                Novo Utilizador
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('admin.reports') }}" class="btn btn-outline w-100">
+                                <i class="fas fa-chart-bar"></i>
+                                Relatórios
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('books.catalog') }}" class="btn btn-outline w-100">
+                                <i class="fas fa-book-open"></i>
+                                Gerir Livros
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline w-100">
+                                <i class="fas fa-users-cog"></i>
+                                Gerir Utilizadores
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('loans.view_loans') }}" class="btn btn-outline w-100">
+                                <i class="fas fa-list"></i>
+                                Ver Requisições
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('documentos.ver_documentos') }}" class="btn btn-outline w-100">
+                                <i class="fas fa-folder-open"></i>
+                                Documentos
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('documentos.upload_documento') }}" class="btn btn-outline w-100">
+                                <i class="fas fa-upload"></i>
+                                Upload Documento
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Estado do Sistema</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Livros Disponíveis</span>
+                        <span class="badge badge-success">{{ (total_livros or 6) - (emprestimos_ativos or 0) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Livros Emprestados</span>
+                        <span class="badge badge-info">{{ emprestimos_ativos or 0 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Requisições Atrasadas</span>
+                        <span class="badge badge-danger">{{ emprestimos_atrasados or 0 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Taxa de Utilização</span>
+                        <span class="badge badge-warning">
+                            {% if total_livros and total_livros > 0 %}
+                                {{ "%.1f"|format(((emprestimos_ativos or 0) / total_livros) * 100) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts and Recent Activity -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Requisições por Mês</h3>
+                </div>
+                <div class="card-body">
+                    {% if monthly_data and monthly_data | length > 0 %}
+                        <div id="monthlyChart" class="simple-chart" 
+                             data-monthly='{{ monthly_data | tojson | safe }}'>
+                            {% for item in monthly_data %}
+                                <div class="chart-bar" 
+                                     data-label="{{ item.label }}" 
+                                     data-value="{{ item.value }}"></div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted mt-3">
+                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                            <p>Nenhuma requisição registada nos últimos 6 meses</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Atividade Recente</h3>
+                </div>
+                <div class="card-body">
+                    <div class="activity-timeline">
+                        {% if atividade_recente %}
+                            {% for atividade in atividade_recente %}
+                            <div class="activity-item">
+                                {% if atividade.tipo == 'emprestimo' %}
+                                <div class="activity-icon bg-info">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <p><strong>Livro emprestado:</strong> {{ atividade.titulo[:30] }}{% if atividade.titulo|length > 30 %}...{% endif %}</p>
+                                    <small class="text-muted">{{ atividade.usuario }} - <span class="activity-date">{{ atividade.data }}</span></small>
+                                </div>
+                                
+                                {% elif atividade.tipo == 'devolucao' %}
+                                <div class="activity-icon bg-warning">
+                                    <i class="fas fa-undo"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <p><strong>Livro devolvido:</strong> {{ atividade.titulo[:30] }}{% if atividade.titulo|length > 30 %}...{% endif %}</p>
+                                    <small class="text-muted">{{ atividade.usuario }} - <span class="activity-date">{{ atividade.data }}</span></small>
+                                </div>
+                                
+                                {% elif atividade.tipo == 'livro_adicionado' %}
+                                <div class="activity-icon bg-success">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <p><strong>Novo livro adicionado:</strong> {{ atividade.titulo[:30] }}{% if atividade.titulo|length > 30 %}...{% endif %}</p>
+                                    <small class="text-muted">{{ atividade.usuario }} - <span class="activity-date">{{ atividade.data }}</span></small>
+                                </div>
+                                
+                                {% elif atividade.tipo == 'usuario_registado' %}
+                                <div class="activity-icon bg-primary">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <p><strong>Novo utilizador registado:</strong> {{ atividade.titulo }}</p>
+                                    <small class="text-muted">{{ atividade.usuario }} - <span class="activity-date">{{ atividade.data }}</span></small>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-clock fa-2x mb-2"></i>
+                            <p>Nenhuma atividade registada recentemente</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alerts and Notifications -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Alertas e Notificações</h3>
+                </div>
+                <div class="card-body">
+                    {% if emprestimos_atrasados and emprestimos_atrasados > 0 %}
+                    <div class="alert alert-warning">
+                        <div class="alert-content">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>
+                                <strong>Atenção!</strong> 
+                                Existem {{ emprestimos_atrasados }} requisição{% if emprestimos_atrasados != 1 %}ões{% endif %} em atraso. 
+                                <a href="{{ url_for('loans.view_loans') }}?status=atrasado">Ver detalhes</a>
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info">
+                        <div class="alert-content">
+                            <i class="fas fa-info-circle"></i>
+                            <span>
+                                <strong>Dica:</strong> 
+                                Use os relatórios para acompanhar as tendências de utilização da biblioteca.
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <div class="alert-content">
+                            <i class="fas fa-check-circle"></i>
+                            <span>
+                                <strong>Sistema operacional!</strong> 
+                                Todos os serviços estão funcionando normalmente.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.stat-icon i {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+}
+
+.activity-timeline {
+    padding: 1rem 0;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.activity-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-content p {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-dark);
+}
+
+.bg-success { background: var(--success-color); }
+.bg-info { background: var(--info-color); }
+.bg-warning { background: var(--warning-color); }
+.bg-primary { background: var(--primary-color); }
+
+.simple-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 200px;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.chart-bar {
+    width: 30px;
+    background: linear-gradient(to top, var(--primary-color), var(--accent-color));
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.chart-bar:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+.chart-bar::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.chart-bar::before {
+    content: attr(data-value);
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: var(--text-dark);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.chart-bar:hover::before {
+    opacity: 1;
+}
+
+.alert {
+    border: none;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+}
+
+.alert-content i {
+    margin-right: 0.75rem;
+    font-size: 1.25rem;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.alert-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+}
+
+.badge-success { background: var(--success-color); }
+.badge-info { background: var(--info-color); }
+.badge-warning { background: var(--warning-color); }
+.badge-danger { background: var(--danger-color); }
+
+.btn.btn-outline {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+}
+
+.btn.btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadDocumentStats();
+});
+// Load document stats
+async function loadDocumentStats() {
+    try {
+        const response = await fetch('/api/documentos/stats');
+        const stats = await response.json();
+        
+        document.getElementById('total-documentos').textContent = stats.total || 0;
+    } catch (error) {
+        console.log('Erro ao carregar estatísticas de documentos:', error);
+    }
+}
+
+// Update statistics periodically
+function updateStats() {
+    fetch('/api/admin/stats')
+        .then(response => response.json())
+        .then(data => {
+            // Update stats if needed
+            console.log('Stats updated:', data);
+        })
+        .catch(error => console.error('Error updating stats:', error));
+}
+
+// Update every 5 minutes
+setInterval(updateStats, 300000);
+
+// Format relative time for activity dates
+function formatRelativeTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 0) {
+        return diffDays === 1 ? 'Há 1 dia' : `Há ${diffDays} dias`;
+    } else if (diffHours > 0) {
+        return diffHours === 1 ? 'Há 1 hora' : `Há ${diffHours} horas`;
+    } else {
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        if (diffMinutes > 0) {
+            return diffMinutes === 1 ? 'Há 1 minuto' : `Há ${diffMinutes} minutos`;
+        } else {
+            return 'Agora mesmo';
+        }
+    }
+}
+
+// Apply relative time formatting on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const activityDates = document.querySelectorAll('.activity-date');
+    activityDates.forEach(function(element) {
+        const dateText = element.textContent.trim();
+        if (dateText && dateText.includes('-')) {
+            element.textContent = formatRelativeTime(dateText);
+        }
+    });
+});
+
+// Load activity timeline
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation to activity items
+    const items = document.querySelectorAll('.activity-item');
+    items.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            item.style.transition = 'all 0.5s ease';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+    
+    // Animate stat cards
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 150 * index);
+    });
+    
+    // Calculate and animate chart bars
+    const monthlyChart = document.getElementById('monthlyChart');
+    if (monthlyChart) {
+        const monthlyData = JSON.parse(monthlyChart.getAttribute('data-monthly') || '[]');
+        const chartBars = document.querySelectorAll('.chart-bar');
+        
+        if (monthlyData.length > 0) {
+            // Find max value for scaling
+            const maxValue = Math.max(...monthlyData.map(item => item.value)) || 1;
+            
+            chartBars.forEach((bar, index) => {
+                const value = parseInt(bar.getAttribute('data-value')) || 0;
+                const heightPercent = Math.round((value / maxValue) * 100);
+                
+                // Set initial height to 0 for animation
+                bar.style.height = '0%';
+                
+                // Animate to final height
+                setTimeout(() => {
+                    bar.style.transition = 'height 0.8s ease';
+                    bar.style.height = heightPercent + '%';
+                }, 500 + (100 * index));
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

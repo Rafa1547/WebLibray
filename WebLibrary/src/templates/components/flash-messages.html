@@ -1,0 +1,328 @@
+<!-- Enhanced Flash Messages Component -->
+{% macro render_flash_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else ('warning' if category == 'warning' else ('info' if category == 'info' else 'success')) }} 
+                                alert-dismissible fade show flash-message" 
+                         role="alert"
+                         data-category="{{ category }}">
+                        
+                        <!-- Icon based on category -->
+                        <div class="d-flex align-items-start">
+                            <div class="flash-icon me-3">
+                                {% if category == 'error' %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                {% elif category == 'info' %}
+                                    <i class="fas fa-info-circle"></i>
+                                {% else %}
+                                    <i class="fas fa-check-circle"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flash-content flex-grow-1">
+                                <!-- Title based on category -->
+                                <div class="flash-title">
+                                    {% if category == 'error' %}
+                                        Erro
+                                    {% elif category == 'warning' %}
+                                        Atenção
+                                    {% elif category == 'info' %}
+                                        Informação
+                                    {% else %}
+                                        Sucesso
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Message content -->
+                                <div class="flash-message-text">
+                                    {{ message }}
+                                </div>
+                                
+                                <!-- Additional actions for specific messages -->
+                                {% if 'eliminado' in message.lower() or 'apagado' in message.lower() %}
+                                    <div class="flash-actions mt-2">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="showUndoAction()">
+                                            <i class="fas fa-undo me-1"></i>Desfazer
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Close button -->
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        
+                        <!-- Progress bar for auto-dismiss -->
+                        {% if category != 'error' %}
+                            <div class="flash-progress">
+                                <div class="flash-progress-bar"></div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+{% endmacro %}
+
+<!-- Notification Toast (for JavaScript notifications) -->
+{% macro notification_template() %}
+<div id="notification-template" style="display: none;">
+    <div class="toast notification-toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="notification-icon me-2"></i>
+            <strong class="me-auto notification-title"></strong>
+            <small class="notification-time">agora</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body notification-body">
+            <!-- Message content -->
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toast-container">
+    <!-- Toasts will be added here dynamically -->
+</div>
+{% endmacro %}
+
+<style>
+.flash-messages-container {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 400px;
+    width: 100%;
+}
+
+.flash-message {
+    margin-bottom: 1rem;
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    backdrop-filter: blur(10px);
+    animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.flash-icon {
+    font-size: 1.25rem;
+    padding-top: 0.125rem;
+}
+
+.flash-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.flash-message-text {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.flash-actions {
+    margin-top: 0.5rem;
+}
+
+.flash-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    overflow: hidden;
+}
+
+.flash-progress-bar {
+    height: 100%;
+    width: 100%;
+    background: rgba(255,255,255,0.8);
+    animation: progressBar 5s linear forwards;
+    transform: translateX(-100%);
+}
+
+@keyframes progressBar {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Auto-dismiss flash messages after 5 seconds (except errors) */
+.flash-message:not([data-category="error"]) {
+    animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+               fadeOut 0.5s ease-in-out 4.5s forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* Custom alert colors with better contrast */
+.alert-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+    border-left: 4px solid #28a745;
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+    border-left: 4px solid #ffc107;
+    color: #856404;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(23, 162, 184, 0.05));
+    border-left: 4px solid #17a2b8;
+    color: #0c5460;
+}
+
+/* Notification Toast Styles */
+.notification-toast {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    backdrop-filter: blur(10px);
+    margin-bottom: 1rem;
+}
+
+.notification-toast .toast-header {
+    background: rgba(255,255,255,0.9);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.notification-toast .toast-body {
+    background: rgba(255,255,255,0.95);
+    border-radius: 0 0 0.75rem 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .flash-messages-container {
+        top: 80px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .flash-message {
+        font-size: 0.9rem;
+    }
+}
+
+/* Hover effects */
+.flash-message:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+}
+
+.flash-message:hover .flash-progress-bar {
+    animation-play-state: paused;
+}
+</style>
+
+<script>
+// JavaScript functions for enhanced flash messages
+function showUndoAction() {
+    // Placeholder for undo functionality
+    alert('Funcionalidade de desfazer em desenvolvimento');
+}
+
+// Function to show notification toasts programmatically
+function showNotification(message, type = 'info', title = '', duration = 5000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast notification-toast';
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    const icons = {
+        success: 'fas fa-check-circle text-success',
+        error: 'fas fa-exclamation-circle text-danger',
+        warning: 'fas fa-exclamation-triangle text-warning',
+        info: 'fas fa-info-circle text-info'
+    };
+    
+    const titles = {
+        success: 'Sucesso',
+        error: 'Erro',
+        warning: 'Atenção',
+        info: 'Informação'
+    };
+    
+    toast.innerHTML = `
+        <div class="toast-header">
+            <i class="${icons[type] || icons.info} me-2"></i>
+            <strong class="me-auto">${title || titles[type] || titles.info}</strong>
+            <small>agora</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            ${message}
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast, {
+        delay: duration
+    });
+    
+    bsToast.show();
+    
+    // Remove from DOM after hiding
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+// Auto-dismiss flash messages (except errors)
+document.addEventListener('DOMContentLoaded', function() {
+    const flashMessages = document.querySelectorAll('.flash-message:not([data-category="error"])');
+    
+    flashMessages.forEach(message => {
+        setTimeout(() => {
+            const alert = new bootstrap.Alert(message);
+            alert.close();
+        }, 5000);
+    });
+});
+</script> 

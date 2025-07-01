@@ -1,0 +1,322 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Meu Perfil - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Meu Perfil</h1>
+                    <p class="text-muted">Gerencie suas informações pessoais e preferências</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('users.edit_profile') }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Editar Perfil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <!-- Profile Picture -->
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle fa-5x text-muted"></i>
+                    </div>
+                    
+                    <!-- User Info -->
+                    <h4 class="mb-1">{{ utilizador.nome }}</h4>
+                    <p class="text-muted mb-3">{{ utilizador.tipo|title }}</p>
+                    
+                    <!-- Status Badge -->
+                    <span class="badge bg-success fs-6 mb-3">
+                        <i class="fas fa-check-circle me-1"></i>Conta Ativa
+                    </span>
+                    
+                    <!-- Quick Stats -->
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h5 class="mb-0 text-primary">{{ stats.emprestimos_ativos }}</h5>
+                                <small class="text-muted">Ativos</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h5 class="mb-0 text-success">{{ stats.total_emprestimos }}</h5>
+                                <small class="text-muted">Total</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="mb-0 text-info">{{ stats.livros_favoritos }}</h5>
+                            <small class="text-muted">Favoritos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('users.edit_profile') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i>Editar Perfil
+                        </a>
+                        <a href="{{ url_for('users.change_password') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-key me-2"></i>Alterar Password
+                        </a>
+                        <a href="{{ url_for('loans.view_loans') }}" class="btn btn-outline-info">
+                            <i class="fas fa-history me-2"></i>Histórico de Requisições
+                        </a>
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-outline-success">
+                            <i class="fas fa-search me-2"></i>Explorar Catálogo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Information -->
+        <div class="col-lg-8">
+            <!-- Personal Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Informações Pessoais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold" style="width: 30%;">
+                                        <i class="fas fa-user me-2"></i>Nome Completo:
+                                    </td>
+                                    <td>{{ utilizador.nome }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="fas fa-envelope me-2"></i>Email:
+                                    </td>
+                                    <td>{{ utilizador.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="fas fa-user-tag me-2"></i>Tipo de Utilizador:
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ utilizador.tipo|title }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="fas fa-calendar-plus me-2"></i>Membro desde:
+                                    </td>
+                                    <td>{{ utilizador.data_registo|datetime('%d/%m/%Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="fas fa-clock me-2"></i>Último acesso:
+                                    </td>
+                                    <td>{{ utilizador.ultimo_acesso|datetime('%d/%m/%Y às %H:%M') if utilizador.ultimo_acesso else 'Primeiro acesso' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Loans -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-book-reader me-2"></i>Requisições Ativas
+                        </h5>
+                        <a href="{{ url_for('loans.view_loans') }}" class="btn btn-sm btn-outline-primary">
+                            Ver Todos <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if emprestimos_ativos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Livro</th>
+                                    <th>Data Requisição</th>
+                                    <th>Data Devolução</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emprestimo in emprestimos_ativos %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                {% if emprestimo.capa_url %}
+                                                <img src="{{ emprestimo.capa_url }}" alt="Capa" class="img-thumbnail" style="width: 40px; height: 50px; object-fit: cover;">
+                                                {% else %}
+                                                <div class="bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 50px;">
+                                                    <i class="fas fa-book text-muted"></i>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ emprestimo.titulo }}</div>
+                                                <small class="text-muted">{{ emprestimo.autor }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>{{ emprestimo.data_emprestimo|datetime('%d/%m/%Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ emprestimo.data_devolucao_prevista|datetime('%d/%m/%Y') }}</small>
+                                        {% if emprestimo.dias_restantes < 0 %}
+                                        <br><span class="badge bg-danger">{{ emprestimo.dias_restantes|abs }} dias atrasado</span>
+                                        {% elif emprestimo.dias_restantes <= 3 %}
+                                        <br><span class="badge bg-warning">{{ emprestimo.dias_restantes }} dias restantes</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if emprestimo.status == 'ativo' %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% elif emprestimo.status == 'atrasado' %}
+                                        <span class="badge bg-danger">Atrasado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('books.details', livro_id=emprestimo.id_livro) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if not emprestimo.renovado %}
+                                            <form method="POST" action="{{ url_for('loans.renew_loan', emprestimo_id=emprestimo.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Renovar">
+                                                    <i class="fas fa-redo"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            <form method="POST" action="{{ url_for('loans.return_loan', emprestimo_id=emprestimo.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-success" 
+                                                        onclick="return confirm('Confirmar devolução?')" title="Devolver">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma requisição ativa</h5>
+                        <p class="text-muted">Explore o nosso catálogo e encontre o seu próximo livro!</p>
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Explorar Catálogo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Favorite Categories -->
+            {% if categorias_favoritas %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-heart me-2"></i>Categorias Favoritas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for categoria in categorias_favoritas %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                <span>{{ categoria.categoria }}</span>
+                                <span class="badge bg-primary">{{ categoria.count }} livros</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i>Explorar Mais Categorias
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.table-borderless td {
+    border: none;
+    padding: 0.75rem 0;
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}
+
+@media (max-width: 768px) {
+    .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in-up');
+        }, 100 * index);
+    });
+    
+    // Check for overdue loans and show warning
+    const overdueLoans = document.querySelectorAll('.badge.bg-danger');
+    if (overdueLoans.length > 0) {
+        setTimeout(() => {
+            WebLibrary.showAlert(
+                `Você tem ${overdueLoans.length} requisição(ões) atrasada(s). Por favor, devolva os livros o mais breve possível.`,
+                'warning'
+            );
+        }, 1000);
+    }
+});
+</script>
+{% endblock %}
+

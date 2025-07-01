@@ -1,0 +1,272 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Olá, {{ session.user_name }}!</h1>
+                    <p class="text-muted">Bem-vindo de volta à WebLibrary</p>
+                </div>
+                <div>
+                    <span class="badge bg-primary fs-6">
+                        <i class="fas fa-user me-1"></i>{{ session.user_type|title }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-book-open text-primary"></i>
+                </div>
+                <div class="stats-number">{{ emprestimos_ativos|length }}</div>
+                <div class="stats-label">Requisições Ativas</div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-history text-success"></i>
+                </div>
+                <div class="stats-number">{{ total_emprestimos }}</div>
+                <div class="stats-label">Total de Requisições</div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-check-circle text-info"></i>
+                </div>
+                <div class="stats-number">{{ emprestimos_devolvidos }}</div>
+                <div class="stats-label">Livros Devolvidos</div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-heart text-danger"></i>
+                </div>
+                <div class="stats-number">{{ categorias_favoritas|length }}</div>
+                <div class="stats-label">Categorias Favoritas</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Loans -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-book-reader me-2"></i>Minhas Requisições Ativas
+                        </h5>
+                        <a href="{{ url_for('loans.view_loans') }}" class="btn btn-sm btn-outline-primary">
+                            Ver Todos <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if emprestimos_ativos %}
+                    <div class="row">
+                        {% for emprestimo in emprestimos_ativos %}
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <div class="me-3">
+                                            {% if emprestimo.capa_url %}
+                                            <img src="{{ emprestimo.capa_url }}" alt="Capa" class="img-thumbnail" style="width: 60px; height: 80px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 80px;">
+                                                <i class="fas fa-book text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1">{{ emprestimo.titulo }}</h6>
+                                            <p class="card-text text-muted small mb-2">{{ emprestimo.autor }}</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                Devolução: {{ emprestimo.data_devolucao_prevista|datetime('%d/%m/%Y') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="btn-group w-100" role="group">
+                                            <a href="{{ url_for('books.details', livro_id=emprestimo.id_livro) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if not emprestimo.renovado %}
+                                            <form method="POST" action="{{ url_for('loans.renew_loan', emprestimo_id=emprestimo.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Renovar">
+                                                    <i class="fas fa-redo"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            <form method="POST" action="{{ url_for('loans.return_loan', emprestimo_id=emprestimo.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-success" 
+                                                        onclick="return confirm('Confirmar devolução?')" title="Devolver">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma requisição ativa</h5>
+                        <p class="text-muted">Explore o nosso catálogo e encontre o seu próximo livro!</p>
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Explorar Catálogo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Books and Favorites -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-star me-2"></i>Livros Recentemente Adicionados
+                        </h5>
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-sm btn-outline-primary">
+                            Ver Catálogo <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if livros_recentes %}
+                    <div class="row">
+                        {% for livro in livros_recentes %}
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="book-card">
+                                <div class="book-cover">
+                                    {% if livro.capa_url %}
+                                    <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" class="w-100 h-100" style="object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-book"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="book-info">
+                                    <h6 class="book-title">{{ livro.titulo }}</h6>
+                                    <p class="book-author">{{ livro.autor }}</p>
+                                    <span class="book-category">{{ livro.categoria }}</span>
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('books.details', livro_id=livro.id) }}" class="btn btn-sm btn-primary w-100">
+                                            <i class="fas fa-eye me-1"></i>Ver Detalhes
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-book fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Nenhum livro recente encontrado.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Profile Summary -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Meu Perfil
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-user-circle fa-4x text-muted"></i>
+                        <h6 class="mt-2">{{ session.user_name }}</h6>
+                        <small class="text-muted">{{ session.user_type|title }}</small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('users.profile') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-2"></i>Ver Perfil
+                        </a>
+                        <a href="{{ url_for('users.edit_profile') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit me-2"></i>Editar Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Favorite Categories -->
+            {% if categorias_favoritas %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-heart me-2"></i>Categorias Favoritas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for categoria in categorias_favoritas %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ categoria.categoria }}</span>
+                        <span class="badge bg-primary">{{ categoria.count }}</span>
+                    </div>
+                    {% endfor %}
+                    <div class="mt-3">
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="fas fa-search me-1"></i>Explorar Mais
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animação dos cards de estatísticas
+    const statsCards = document.querySelectorAll('.stats-card');
+    statsCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in-up');
+        }, 100 * index);
+    });
+    
+    // Animação dos cards de livros
+    const bookCards = document.querySelectorAll('.book-card');
+    bookCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in-up');
+        }, 200 + (50 * index));
+    });
+});
+</script>
+{% endblock %}
+

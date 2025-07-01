@@ -1,0 +1,309 @@
+{% extends "layouts/base.html" %}
+{% from 'components/breadcrumbs.html' import quick_breadcrumb %}
+
+{% block title %}Detalhes da Requisição #{{ emprestimo.id }} - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Início</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('loans.view_loans') }}">Requisições</a></li>
+            <li class="breadcrumb-item active">Detalhes #{{ emprestimo.id }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        Detalhes da Requisição #{{ emprestimo.id }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        <span class="badge bg-{{ emprestimo.status_info.class }}">
+                            <i class="{{ emprestimo.status_info.icon }} me-1"></i>
+                            {{ emprestimo.status_info.label }}
+                        </span>
+                        {% if emprestimo.status == 'ativo' and emprestimo.dias_restantes < 0 %}
+                        <span class="badge bg-danger ms-1">{{ emprestimo.dias_restantes|abs }} dias de atraso</span>
+                        {% elif emprestimo.status == 'ativo' and emprestimo.dias_restantes <= 3 %}
+                        <span class="badge bg-warning ms-1">{{ emprestimo.dias_restantes }} dias restantes</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('loans.view_loans') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </a>
+                    {% if emprestimo.status == 'ativo' %}
+                        {% if not emprestimo.renovado %}
+                        <form method="POST" action="{{ url_for('loans.renew_loan', emprestimo_id=emprestimo.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-redo me-1"></i>Renovar
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('loans.return_loan', emprestimo_id=emprestimo.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-success" 
+                                    onclick="return confirm('Confirmar devolução?')">
+                                <i class="fas fa-check me-1"></i>Devolver
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações do Livro -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>Livro
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Capa do Livro -->
+                    <div class="text-center mb-3">
+                        {% if emprestimo.capa_url %}
+                        <img src="{{ emprestimo.capa_url }}" alt="Capa de {{ emprestimo.titulo }}" 
+                             class="img-fluid rounded shadow-sm" style="max-height: 200px;">
+                        {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded" 
+                             style="height: 200px; width: 150px; margin: 0 auto;">
+                            <i class="fas fa-book fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Informações do Livro -->
+                    <div class="book-info">
+                        <h6 class="fw-bold text-primary">{{ emprestimo.titulo }}</h6>
+                        <p class="text-muted mb-2">por {{ emprestimo.autor }}</p>
+                        
+                        <div class="mb-3">
+                            <span class="badge bg-primary">{{ emprestimo.categoria }}</span>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>ISBN:</strong> {{ emprestimo.isbn or 'N/A' }}
+                            </div>
+                            <div class="info-item">
+                                <strong>Editora:</strong> {{ emprestimo.editora or 'N/A' }}
+                            </div>
+                            <div class="info-item">
+                                <strong>Ano:</strong> {{ emprestimo.ano_publicacao or 'N/A' }}
+                            </div>
+                            <div class="info-item">
+                                <strong>Páginas:</strong> {{ emprestimo.paginas or 'N/A' }}
+                            </div>
+                            <div class="info-item">
+                                <strong>Idioma:</strong> {{ emprestimo.idioma or 'N/A' }}
+                            </div>
+                        </div>
+
+                        {% if emprestimo.livro_descricao %}
+                        <div class="mt-3">
+                            <strong>Descrição:</strong>
+                            <p class="text-muted small mt-1">{{ emprestimo.livro_descricao[:150] }}{% if emprestimo.livro_descricao|length > 150 %}...{% endif %}</p>
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-3">
+                            <a href="{{ url_for('books.details', livro_id=emprestimo.id_livro) }}" 
+                               class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-1"></i>Ver Detalhes do Livro
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Empréstimo -->
+        <div class="col-lg-8">
+            <div class="row">
+                <!-- Dados do Empréstimo -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-handshake me-2"></i>Dados do Empréstimo
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <strong>ID:</strong> #{{ emprestimo.id }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Data de Requisição:</strong>
+                                    <br>{{ emprestimo.data_emprestimo|datetime('%d/%m/%Y às %H:%M') }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Data Prev. Devolução:</strong>
+                                    <br>{{ emprestimo.data_devolucao_prevista|datetime('%d/%m/%Y') }}
+                                </div>
+                                {% if emprestimo.data_devolucao_real %}
+                                <div class="info-item">
+                                    <strong>Data Real Devolução:</strong>
+                                    <br>{{ emprestimo.data_devolucao_real|datetime('%d/%m/%Y às %H:%M') }}
+                                </div>
+                                {% endif %}
+                                <div class="info-item">
+                                    <strong>Status:</strong>
+                                    <br><span class="badge bg-{{ emprestimo.status_info.class }}">
+                                        <i class="{{ emprestimo.status_info.icon }} me-1"></i>
+                                        {{ emprestimo.status_info.label }}
+                                    </span>
+                                </div>
+                                {% if emprestimo.renovado %}
+                                <div class="info-item">
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-redo me-1"></i>Renovado
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Informações de Atraso/Multa -->
+                            {% if emprestimo.status == 'ativo' and emprestimo.dias_restantes < 0 %}
+                            <div class="alert alert-danger mt-3">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Empréstimo em Atraso
+                                </h6>
+                                <p class="mb-1">
+                                    <strong>Dias de atraso:</strong> {{ emprestimo.dias_restantes|abs }} dias
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Multa calculada:</strong> €{{ "%.2f"|format(emprestimo.multa) }}
+                                    <small class="text-muted">(€0.50/dia)</small>
+                                </p>
+                            </div>
+                            {% elif emprestimo.status == 'ativo' and emprestimo.dias_restantes <= 3 %}
+                            <div class="alert alert-warning mt-3">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-clock me-1"></i>Prazo Próximo do Vencimento
+                                </h6>
+                                <p class="mb-0">
+                                    Restam apenas <strong>{{ emprestimo.dias_restantes }} dias</strong> para devolução.
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dados do Utilizador -->
+                {% if user_type == 'admin' %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user me-2"></i>Utilizador
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="user-avatar me-3">
+                                    <i class="fas fa-user-circle fa-3x text-muted"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">{{ emprestimo.nome_utilizador }}</h6>
+                                    <small class="text-muted">{{ emprestimo.email_utilizador }}</small>
+                                </div>
+                            </div>
+
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <strong>ID:</strong> #{{ emprestimo.id_utilizador }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Email:</strong> {{ emprestimo.email_utilizador }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.info-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.info-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 50%;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.alert {
+    border: none;
+    border-radius: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+});
+</script>
+{% endblock %} 

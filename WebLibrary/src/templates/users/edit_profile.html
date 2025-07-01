@@ -1,0 +1,339 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Editar Perfil - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Editar Perfil</h1>
+                    <p class="text-muted">Atualize suas informações pessoais e preferências</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('users.profile') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar ao Perfil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Informações Pessoais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('users.edit_profile') }}">
+                        <!-- Nome -->
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">
+                                <i class="fas fa-user me-1"></i>Nome Completo *
+                            </label>
+                            <input type="text" class="form-control" id="nome" name="nome" 
+                                   value="{{ user.nome if user else '' }}" required>
+                            <div class="form-text">Seu nome completo como deve aparecer no sistema</div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email *
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ user.email if user else '' }}" required>
+                            <div class="form-text">Usado para login e comunicações importantes</div>
+                        </div>
+
+                        <!-- Telefone -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="telefone" class="form-label">
+                                        <i class="fas fa-phone me-1"></i>Telefone
+                                    </label>
+                                    <input type="tel" class="form-control" id="telefone" name="telefone" 
+                                           value="{{ user.telefone if user and user.telefone else '' }}"
+                                           placeholder="+351 123 456 789">
+                                    <div class="form-text">Opcional - para contacto de emergência</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="data_nascimento" class="form-label">
+                                        <i class="fas fa-birthday-cake me-1"></i>Data de Nascimento
+                                    </label>
+                                    <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" 
+                                           value="{{ user.data_nascimento if user and user.data_nascimento else '' }}">
+                                    <div class="form-text">Opcional</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Endereço -->
+                        <div class="mb-3">
+                            <label for="endereco" class="form-label">
+                                <i class="fas fa-map-marker-alt me-1"></i>Endereço
+                            </label>
+                            <textarea class="form-control" id="endereco" name="endereco" rows="2" 
+                                      placeholder="Rua, Número, Código Postal, Cidade">{{ user.endereco if user and user.endereco else '' }}</textarea>
+                            <div class="form-text">Opcional - endereço completo</div>
+                        </div>
+
+                        <!-- Biografia -->
+                        <div class="mb-3">
+                            <label for="biografia" class="form-label">
+                                <i class="fas fa-user-circle me-1"></i>Biografia
+                            </label>
+                            <textarea class="form-control" id="biografia" name="biografia" rows="3" 
+                                      placeholder="Conte um pouco sobre você, seus interesses de leitura...">{{ user.biografia if user and user.biografia else '' }}</textarea>
+                            <div class="form-text">Opcional - máximo 500 caracteres</div>
+                        </div>
+
+                        <!-- Preferências -->
+                        <div class="card mt-4 mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-cog me-2"></i>Preferências
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="notificacoes_email" 
+                                           name="notificacoes_email" 
+                                           {{ 'checked' if user and user.notificacoes_email else '' }}>
+                                    <label class="form-check-label" for="notificacoes_email">
+                                        <i class="fas fa-envelope me-2"></i>Receber notificações por email
+                                    </label>
+                                    <div class="form-text">Novidades, atualizações e informações importantes</div>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="lembretes_devolucao" 
+                                           name="lembretes_devolucao" 
+                                           {{ 'checked' if user and user.lembretes_devolucao else '' }}>
+                                    <label class="form-check-label" for="lembretes_devolucao">
+                                        <i class="fas fa-clock me-2"></i>Lembretes de devolução
+                                    </label>
+                                    <div class="form-text">Avisos sobre prazos de devolução de livros</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('users.profile') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="col-lg-4">
+            <!-- Current Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações Atuais
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if user %}
+                    <div class="mb-3">
+                        <strong>Nome:</strong><br>
+                        <span class="text-muted">{{ user.nome }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Email:</strong><br>
+                        <span class="text-muted">{{ user.email }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Tipo de Conta:</strong><br>
+                        <span class="badge bg-primary">{{ user.tipo|title }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Membro desde:</strong><br>
+                        <span class="text-muted">{{ user.data_registo|datetime('%d/%m/%Y') if user.data_registo else 'N/A' }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Outras Ações
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('users.change_password') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-key me-2"></i>Alterar Password
+                        </a>
+                        <a href="{{ url_for('loans.view_loans') }}" class="btn btn-outline-info">
+                            <i class="fas fa-history me-2"></i>Minhas Requisições
+                        </a>
+                        <a href="{{ url_for('books.catalog') }}" class="btn btn-outline-success">
+                            <i class="fas fa-search me-2"></i>Explorar Catálogo
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Tips -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>Dicas de Segurança
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Use um email válido para recuperação de conta
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Mantenha suas informações atualizadas
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Altere sua password regularmente
+                        </li>
+                        <li>
+                            <i class="fas fa-check text-success me-2"></i>
+                            Não partilhe suas credenciais
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-check {
+    padding: 0.75rem;
+    background-color: var(--background-light);
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+}
+
+.form-check:hover {
+    background-color: #e9ecef;
+}
+
+.card-header h6 {
+    color: var(--white);
+    margin: 0;
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .d-flex.justify-content-between {
+        flex-direction: column-reverse;
+        gap: 1rem;
+    }
+    
+    .d-flex.justify-content-between .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validação em tempo real
+    const form = document.querySelector('form');
+    
+    // Validar nome
+    const nomeInput = document.getElementById('nome');
+    nomeInput.addEventListener('input', function() {
+        const nome = this.value.trim();
+        if (nome.length < 2) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        } else {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+        }
+    });
+    
+    // Validar email
+    const emailInput = document.getElementById('email');
+    emailInput.addEventListener('input', function() {
+        const email = this.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        } else {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+        }
+    });
+    
+    // Contar caracteres da biografia
+    const biografiaInput = document.getElementById('biografia');
+    const biografiaHelp = biografiaInput.nextElementSibling;
+    biografiaInput.addEventListener('input', function() {
+        const length = this.value.length;
+        const maxLength = 500;
+        biografiaHelp.textContent = `${length}/${maxLength} caracteres`;
+        
+        if (length > maxLength) {
+            this.classList.add('is-invalid');
+            biografiaHelp.classList.add('text-danger');
+        } else {
+            this.classList.remove('is-invalid');
+            biografiaHelp.classList.remove('text-danger');
+        }
+    });
+    
+    // Confirmação antes de sair sem salvar
+    let formChanged = false;
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            formChanged = true;
+        });
+    });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    
+    // Remover aviso ao enviar formulário
+    form.addEventListener('submit', function() {
+        formChanged = false;
+    });
+});
+</script>
+{% endblock %} 

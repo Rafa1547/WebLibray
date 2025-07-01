@@ -1,0 +1,78 @@
+{% extends 'layouts/base.html' %}
+{% from 'components/breadcrumbs.html' import quick_breadcrumb %}
+
+{% block title %}Meus Documentos{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {{ quick_breadcrumb('documentos', 'Meus Documentos', 'fas fa-user-edit') }}
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('documentos.ver_documentos') }}" class="btn btn-outline-secondary me-3">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-user-edit text-accent me-2"></i>
+                Meus Documentos
+            </h1>
+            <p class="text-muted mb-0">Documentos carregados por si</p>
+        </div>
+    </div>
+
+    {% if documentos %}
+    <div class="row">
+        {% for documento in documentos %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="{{ get_file_type_icon(documento.ficheiro) }} me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-1">{{ documento.titulo }}</h5>
+                            <small class="text-muted">{{ documento.tipo_ficheiro.upper() }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="badge rounded-pill {{ get_disciplina_class(documento.disciplina) }}">
+                            {{ documento.disciplina }}
+                        </span>
+                        <span class="badge bg-secondary rounded-pill ms-1">{{ documento.ano_escolaridade }}</span>
+                    </div>
+                    
+                    <div class="text-muted small mb-3">
+                        <div><i class="fas fa-calendar me-1"></i>
+                            {{ documento.data_upload|datetime('%d/%m/%Y') }}
+                        </div>
+                        <div><i class="fas fa-download me-1"></i>{{ documento.downloads }} downloads</div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('documentos.download_documento', doc_id=documento.id) }}" class="btn btn-primary flex-grow-1">
+                            <i class="fas fa-download me-1"></i>Download
+                        </a>
+                        <form method="POST" action="{{ url_for('documentos.delete_documento', doc_id=documento.id) }}" 
+                              class="d-inline" onsubmit="return confirm('Tem certeza?')">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-folder-open text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 text-muted">Ainda não carregou documentos</h4>
+            <a href="{{ url_for('documentos.upload_documento') }}" class="btn btn-accent mt-2">
+                <i class="fas fa-upload me-1"></i>Carregar Primeiro Documento
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,478 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Biblioteca Florbela Espanca - Sistema de Gestão Bibliográfica{% endblock %}
+
+{% block body_class %}homepage{% endblock %}
+
+{% block content %}
+<!-- Institutional Header Section -->
+<section class="institutional-header py-4 bg-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                <!-- Logo da Escola -->
+                <div class="school-logo-container">
+                    <img src="{{ url_for('static', filename='images/esmcargaleiro-logo.png') }}" 
+                         alt="Escola Secundária Manuel Cargaleiro" 
+                         class="school-logo img-fluid"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div class="logo-placeholder" style="display: none;">
+                        <i class="fas fa-university fa-4x text-primary"></i>
+                        <p class="mt-2 text-muted small">ESMCARGALEIRO</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <h2 class="institutional-title mb-2">Biblioteca Florbela Espanca</h2>
+                <p class="institutional-subtitle text-muted">
+                    Escola Secundária Manuel Cargaleiro<br>
+                    <span class="rbe-badge">RBE</span> Rede de Bibliotecas Escolares
+                </p>
+            </div>
+            <div class="col-md-3 text-center">
+                <!-- Logo Sistema -->
+                <div class="system-logo-container">
+                    <i class="fas fa-books fa-4x text-primary mb-2"></i>
+                    <h5 class="text-primary">Sistema de Gestão</h5>
+                    <small class="text-muted">Bibliográfica Digital</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hero Section with Library Image -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1 class="hero-title">Biblioteca Florbela Espanca</h1>
+                <p class="hero-subtitle">
+                    Desenvolver competências, fomentar o conhecimento e promover a aprendizagem ao longo da vida. 
+                    Uma biblioteca escolar moderna ao serviço da comunidade educativa.
+                </p>
+                <div class="florbela-quote">
+                    "Se ao lado da Biblioteca houver um jardim, nada faltará." - Cícero
+                </div>
+                <div class="hero-buttons">
+                    {% if not session.user_id %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-accent btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Registar-se
+                    </a>
+                    <a href="{{ url_for('books.catalog') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-books me-2"></i>Explorar Catálogo
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-accent btn-lg me-3">
+                        <i class="fas fa-tachometer-alt me-2"></i>Ir para Dashboard
+                    </a>
+                    <a href="{{ url_for('books.catalog') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-books me-2"></i>Ver Catálogo
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <!-- Espaço para Imagem da Biblioteca -->
+                <div class="library-image-container text-center">
+                    <img src="{{ url_for('static', filename='images/library-main.jpg') }}" 
+                         alt="Biblioteca" 
+                         class="library-main-image img-fluid rounded-custom shadow-custom"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div class="image-placeholder" style="display: none;">
+                        <div class="placeholder-content bg-light rounded-custom p-5 shadow-custom">
+                            <i class="fas fa-university fa-5x text-primary mb-3"></i>
+                            <h4 class="text-primary">Imagem da Biblioteca</h4>
+                            <p class="text-muted">Adicione aqui a foto da sua biblioteca</p>
+                            <small class="text-muted">Formato recomendado: 800x600px</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stats-number">{{ stats.livros }}</div>
+                    <div class="stats-label">Livros Disponíveis</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stats-number">{{ stats.utilizadores }}</div>
+                    <div class="stats-label">Utilizadores Registados</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stats-number">{{ stats.categorias }}</div>
+                    <div class="stats-label">Categorias</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="stats-number">{{ stats.emprestimos }}</div>
+                    <div class="stats-label">Requisições Realizadas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center mb-5">
+                <h2 class="display-5 mb-3">Projetos e Atividades</h2>
+                <p class="lead text-muted">
+                    A Biblioteca Florbela Espanca dinamiza um conjunto de atividades que visam desenvolver competências, o conhecimento, fomentar a aprendizagem e a criatividade
+                </p>
+                <div class="academic-border mt-3">
+                    <small class="text-muted fst-italic">
+                        Inserida na <strong>Rede de Bibliotecas Escolares (RBE)</strong> desde 1999/2000
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-video fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">Book Trailer</h5>
+                        <p class="card-text">
+                            Promoção da leitura através de trailers de livros criados pelos alunos, 
+                            combinando literatura com meios audiovisuais modernos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-graduation-cap fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">Escola a Ler</h5>
+                        <p class="card-text">
+                            Sessões de promoção do livro e da leitura, desenvolvendo hábitos 
+                            de leitura e competências literárias na comunidade escolar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-headphones fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">"Ouvir um Conto"</h5>
+                        <p class="card-text">
+                            Atividades de literacia auditiva com narração de contos, 
+                            desenvolvendo a imaginação e o prazer pela literatura oral.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-globe-europe fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">Projetos Erasmus+</h5>
+                        <p class="card-text">
+                            Participação em projetos europeus como "Success for Every Child", 
+                            promovendo intercâmbio cultural e educacional.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-palette fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">Projetos Artísticos</h5>
+                        <p class="card-text">
+                            Integração da literatura com outras artes, incluindo o 
+                            "Cargaleiro Art Fest" e celebrações do Dia do Patrono.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-book-reader fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">Semana da Leitura</h5>
+                        <p class="card-text">
+                            Eventos anuais como "Livros, Afetos e Memórias" e saraus literários, 
+                            celebrando a literatura e promovendo a leitura.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-hands-helping fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">Voluntariado/Cívico</h5>
+                        <p class="card-text">
+                            Projetos de cidadania e voluntariado, incluindo parcerias 
+                            com o Gabinete da Juventude e iniciativas comunitárias.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-film fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">Plano Nacional de Cinema</h5>
+                        <p class="card-text">
+                            Literacia cinematográfica e visual, desenvolvendo competências 
+                            de análise crítica e apreciação artística.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 text-center academic-card">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-laptop fa-3x text-accent"></i>
+                        </div>
+                        <h5 class="card-title">Biblioteca Digital</h5>
+                        <p class="card-text">
+                            Recursos digitais e sistema de gestão online, facilitando 
+                            o acesso ao catálogo e serviços da biblioteca.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+{% if not session.user_id %}
+<section class="py-5" style="background: linear-gradient(135deg, var(--primary-color), #1e40af);">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center text-white">
+                <h2 class="display-6 mb-3">Acesso à Biblioteca</h2>
+                <p class="lead mb-4">
+                    Membros da comunidade escolar podem aceder ao sistema de gestão bibliográfica 
+                    para consultar o catálogo e gerir requisições.
+                </p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-accent btn-lg me-3">
+                    <i class="fas fa-user-plus me-2"></i>Registar Utilizador
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sessão
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Recent Activities Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center mb-5">
+                <h2 class="display-6 mb-3">Atividades e Eventos Recentes</h2>
+                <p class="lead text-muted">
+                    Acompanhe as últimas iniciativas da Biblioteca Florbela Espanca
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card academic-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-accent">
+                            <i class="fas fa-calendar-alt me-2"></i>Semana da Leitura
+                        </h5>
+                        <p class="card-text">
+                            Saraus literários e atividades "Livros, Afetos e Memórias", 
+                            celebrando a 17ª Semana da Leitura com a participação da comunidade escolar.
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>27-31 de março
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card academic-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-accent">
+                            <i class="fas fa-book-open me-2"></i>4ª Feira do Livro Usado
+                        </h5>
+                        <p class="card-text">
+                            Promoção da leitura através da reutilização de livros, 
+                            tornando a literatura mais acessível à comunidade.
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>27-31 de março
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card academic-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-accent">
+                            <i class="fas fa-shield-alt me-2"></i>Workshop Segurança na Internet
+                        </h5>
+                        <p class="card-text">
+                            Atividade no âmbito do projeto Erasmus "Success for Every Child", 
+                            promovendo literacia digital e segurança online.
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>Projeto Erasmus+
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card academic-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-accent">
+                            <i class="fas fa-chess me-2"></i>Torneio de Xadrez
+                        </h5>
+                        <p class="card-text">
+                            Atividade de desenvolvimento cognitivo e estratégico, 
+                            promovendo o raciocínio lógico entre os estudantes.
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>Biblioteca | 10:10h
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card academic-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-accent">
+                            <i class="fas fa-music me-2"></i>Café Concerto
+                        </h5>
+                        <p class="card-text">
+                            Evento cultural dinamizado pela Associação de Pais, 
+                            integrando música e convívio na comunidade escolar.
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-users me-1"></i>Associação de Pais
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card academic-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-accent">
+                            <i class="fas fa-palette me-2"></i>Cargaleiro Art Fest
+                        </h5>
+                        <p class="card-text">
+                            Festival artístico em homenagem ao patrono da escola, 
+                            Manuel Cargaleiro, integrando arte e literatura.
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>16-17 de março
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Books Section (if logged in) -->
+{% if session.user_id %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">Catálogo Digital</h2>
+                    <a href="{{ url_for('books.catalog') }}" class="btn btn-outline-primary">
+                        Explorar Catálogo <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 text-center py-5">
+                <i class="fas fa-books fa-4x text-accent mb-3"></i>
+                <h4 class="text-accent mb-3">Sistema de Gestão Bibliográfica</h4>
+                <p class="text-muted mb-4">
+                    Aceda ao catálogo digital da Biblioteca Florbela Espanca para consultar 
+                    o acervo disponível e gerir as suas requisições.
+                </p>
+                <a href="{{ url_for('books.catalog') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-search me-2"></i>Pesquisar Livros
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animação específica para a homepage
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar efeito de typing ao título hero
+    const heroTitle = document.querySelector('.hero-title');
+    if (heroTitle) {
+        heroTitle.style.opacity = '0';
+        setTimeout(() => {
+            heroTitle.style.opacity = '1';
+            heroTitle.classList.add('fade-in-up');
+        }, 300);
+    }
+    
+    // Animação sequencial dos cards de features
+    const featureCards = document.querySelectorAll('.card');
+    featureCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in-up');
+        }, 100 * index);
+    });
+});
+</script>
+{% endblock %}
+

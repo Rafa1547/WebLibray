@@ -1,0 +1,213 @@
+{% extends 'layouts/base.html' %}
+{% from 'components/breadcrumbs.html' import quick_breadcrumb %}
+
+{% block title %}Carregar Documento{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {{ quick_breadcrumb('documentos', 'Carregar Documento', 'fas fa-upload') }}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{{ url_for('documentos.ver_documentos') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-upload text-accent me-2"></i>
+                        Carregar Documento
+                    </h1>
+                    <p class="text-muted mb-0">Adicione um novo documento de estudo</p>
+                </div>
+            </div>
+
+            <!-- Formulário -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-upload me-2"></i>
+                        Informações do Documento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate data-autosave="true">
+                        <!-- Título -->
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label">
+                                <i class="fas fa-heading me-1"></i>
+                                Título <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" 
+                                   placeholder="Ex: Exercícios de Álgebra - 9º Ano" required maxlength="255"
+                                   data-bs-toggle="tooltip" title="Título descritivo e claro para facilitar a pesquisa">
+                            <div class="form-text">Título descritivo do documento (máximo 255 caracteres)</div>
+                        </div>
+
+                        <!-- Descrição -->
+                        <div class="mb-3">
+                            <label for="descricao" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>
+                                Descrição
+                            </label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="3" 
+                                      placeholder="Breve descrição do conteúdo do documento..." maxlength="1000"
+                                      data-autosave="true" data-bs-toggle="tooltip" 
+                                      title="Descreva brevemente o conteúdo para ajudar outros utilizadores"></textarea>
+                            <div class="form-text">Descrição opcional do documento (máximo 1000 caracteres)</div>
+                        </div>
+
+                        <!-- Ano de Escolaridade -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="ano_escolaridade" class="form-label">
+                                    <i class="fas fa-graduation-cap me-1"></i>
+                                    Ano de Escolaridade <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="ano_escolaridade" name="ano_escolaridade" required>
+                                    <option value="">Selecione o ano</option>
+                                    <option value="5º Ano">5º Ano</option>
+                                    <option value="6º Ano">6º Ano</option>
+                                    <option value="7º Ano">7º Ano</option>
+                                    <option value="8º Ano">8º Ano</option>
+                                    <option value="9º Ano">9º Ano</option>
+                                    <option value="10º Ano">10º Ano</option>
+                                    <option value="11º Ano">11º Ano</option>
+                                    <option value="12º Ano">12º Ano</option>
+                                    <option value="Ensino Superior">Ensino Superior</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+
+                            <!-- Disciplina -->
+                            <div class="col-md-6">
+                                <label for="disciplina" class="form-label">
+                                    <i class="fas fa-book me-1"></i>
+                                    Disciplina <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="disciplina" name="disciplina" 
+                                       placeholder="Ex: Matemática" required maxlength="100" list="disciplinas-list">
+                                <datalist id="disciplinas-list">
+                                    <option value="Matemática">
+                                    <option value="Português">
+                                    <option value="Inglês">
+                                    <option value="Francês">
+                                    <option value="História">
+                                    <option value="Geografia">
+                                    <option value="Físico-Química">
+                                    <option value="Ciências Naturais">
+                                    <option value="Biologia">
+                                    <option value="Geologia">
+                                    <option value="Filosofia">
+                                    <option value="Educação Física">
+                                    <option value="Educação Visual">
+                                    <option value="Educação Tecnológica">
+                                    <option value="Educação Musical">
+                                    <option value="Informática">
+                                    <option value="Economia">
+                                    <option value="Psicologia">
+                                </datalist>
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">
+                                <i class="fas fa-tags me-1"></i>
+                                Tags
+                            </label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   placeholder="Ex: exercícios, teste, resumo (separadas por vírgulas)">
+                            <div class="form-text">Tags para facilitar a pesquisa (opcional, separadas por vírgulas)</div>
+                        </div>
+
+                        <!-- Ficheiro -->
+                        <div class="mb-4">
+                            <label for="ficheiro" class="form-label">
+                                <i class="fas fa-file me-1"></i>
+                                Ficheiro <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" class="form-control" id="ficheiro" name="ficheiro" required
+                                   accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.xls"
+                                   data-bs-toggle="tooltip" title="Arraste e solte o ficheiro ou clique para selecionar">
+                            <div class="form-text">
+                                Tipos permitidos: PDF, DOC, DOCX, PPT, PPTX, TXT, PNG, JPG, JPEG, GIF, XLSX, XLS
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-accent flex-grow-1">
+                                <i class="fas fa-upload me-1"></i>
+                                Carregar Documento
+                            </button>
+                            <a href="{{ url_for('documentos.ver_documentos') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informações Úteis -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Dicas para um Bom Upload
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                Títulos Eficazes
+                            </h6>
+                            <ul class="small text-muted">
+                                <li>Seja específico e descritivo</li>
+                                <li>Inclua o ano de escolaridade</li>
+                                <li>Mencione o tipo de conteúdo</li>
+                                <li>Ex: "Teste de Matemática - Funções - 10º Ano"</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success">
+                                <i class="fas fa-file-check me-1"></i>
+                                Qualidade dos Ficheiros
+                            </h6>
+                            <ul class="small text-muted">
+                                <li>Certifique-se de que o ficheiro abre corretamente</li>
+                                <li>Use nomes de ficheiro descritivos</li>
+                                <li>Prefira PDF para documentos finais</li>
+                                <li>Mantenha o tamanho razoável (máx. 16MB)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview do nome do ficheiro
+document.getElementById('ficheiro').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name;
+    if (fileName) {
+        // Pode adicionar lógica para mostrar preview do nome do ficheiro
+        console.log('Ficheiro selecionado:', fileName);
+    }
+});
+
+// Auto-completar disciplina baseado no que já foi digitado
+document.getElementById('disciplina').addEventListener('input', function(e) {
+    const value = e.target.value;
+    // Capitalizar primeira letra
+    if (value.length === 1) {
+        e.target.value = value.charAt(0).toUpperCase();
+    }
+});
+</script>
+{% endblock %} 

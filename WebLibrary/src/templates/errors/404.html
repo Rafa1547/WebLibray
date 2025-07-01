@@ -1,0 +1,104 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Página Não Encontrada - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 text-center">
+            <div class="error-page">
+                <div class="error-icon mb-4">
+                    <i class="fas fa-book-open fa-5x text-muted"></i>
+                </div>
+                
+                <h1 class="error-code">404</h1>
+                <h2 class="error-title">Página Não Encontrada</h2>
+                
+                <p class="error-description">
+                    A página que procura não existe ou foi movida. 
+                    Pode ter sido removida, ter o nome alterado ou estar temporariamente indisponível.
+                </p>
+                
+                <div class="error-actions mt-4">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary me-3">
+                        <i class="fas fa-home me-2"></i>Voltar ao Início
+                    </a>
+                    <a href="{{ url_for('books.catalog') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-book me-2"></i>Ver Catálogo
+                    </a>
+                </div>
+                
+                <div class="error-suggestions mt-5">
+                    <h5>Sugestões:</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-search me-2"></i>Utilize a pesquisa para encontrar livros</li>
+                        <li><i class="fas fa-list me-2"></i>Navegue pelas categorias disponíveis</li>
+                        <li><i class="fas fa-home me-2"></i>Volte à página inicial</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.error-page {
+    padding: 3rem 0;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.error-title {
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+}
+
+.error-description {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.error-suggestions {
+    text-align: left;
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.error-suggestions ul li {
+    padding: 0.5rem 0;
+    color: var(--text-muted);
+}
+
+.error-icon {
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 4rem;
+    }
+    
+    .error-actions .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .error-actions .me-3 {
+        margin-right: 0 !important;
+    }
+}
+</style>
+{% endblock %}
+

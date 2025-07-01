@@ -1,0 +1,83 @@
+<!-- Breadcrumbs Component -->
+{% macro render_breadcrumbs(items) %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-light p-3 rounded">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('main.index') }}" class="text-decoration-none">
+                <i class="fas fa-home me-1"></i>Início
+            </a>
+        </li>
+        {% for item in items %}
+            {% if loop.last %}
+                <li class="breadcrumb-item active" aria-current="page">
+                    {% if item.icon %}<i class="{{ item.icon }} me-1"></i>{% endif %}
+                    {{ item.title }}
+                </li>
+            {% else %}
+                <li class="breadcrumb-item">
+                    <a href="{{ item.url }}" class="text-decoration-none">
+                        {% if item.icon %}<i class="{{ item.icon }} me-1"></i>{% endif %}
+                        {{ item.title }}
+                    </a>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+{% endmacro %}
+
+<!-- Quick Breadcrumb for common pages -->
+{% macro quick_breadcrumb(section, page=None, custom_icon=None) %}
+    {% set breadcrumb_items = [] %}
+    
+    {% if section == 'dashboard' %}
+        {% set breadcrumb_items = [{'title': 'Dashboard', 'icon': 'fas fa-tachometer-alt'}] %}
+    {% elif section == 'books' %}
+        {% if page %}
+            {% set breadcrumb_items = [
+                {'title': 'Catálogo', 'url': url_for('books.catalog'), 'icon': 'fas fa-books'},
+                {'title': page, 'icon': custom_icon or 'fas fa-book'}
+            ] %}
+        {% else %}
+            {% set breadcrumb_items = [{'title': 'Catálogo', 'icon': 'fas fa-books'}] %}
+        {% endif %}
+    {% elif section == 'documentos' %}
+        {% if page %}
+            {% set breadcrumb_items = [
+                {'title': 'Documentos', 'url': url_for('documentos.ver_documentos'), 'icon': 'fas fa-folder-open'},
+                {'title': page, 'icon': custom_icon or 'fas fa-file'}
+            ] %}
+        {% else %}
+            {% set breadcrumb_items = [{'title': 'Documentos', 'icon': 'fas fa-folder-open'}] %}
+        {% endif %}
+    {% elif section == 'loans' %}
+        {% if page %}
+            {% set breadcrumb_items = [
+                {'title': 'Requisições', 'url': url_for('loans.view_loans'), 'icon': 'fas fa-exchange-alt'},
+                {'title': page, 'icon': custom_icon or 'fas fa-handshake'}
+            ] %}
+        {% else %}
+            {% set breadcrumb_items = [{'title': 'Requisições', 'icon': 'fas fa-exchange-alt'}] %}
+        {% endif %}
+    {% elif section == 'admin' %}
+        {% if page %}
+            {% set breadcrumb_items = [
+                {'title': 'Administração', 'url': url_for('admin.manage_users'), 'icon': 'fas fa-cog'},
+                {'title': page, 'icon': custom_icon or 'fas fa-tools'}
+            ] %}
+        {% else %}
+            {% set breadcrumb_items = [{'title': 'Administração', 'icon': 'fas fa-cog'}] %}
+        {% endif %}
+    {% elif section == 'profile' %}
+        {% if page %}
+            {% set breadcrumb_items = [
+                {'title': 'Perfil', 'url': url_for('users.profile'), 'icon': 'fas fa-user'},
+                {'title': page, 'icon': custom_icon or 'fas fa-edit'}
+            ] %}
+        {% else %}
+            {% set breadcrumb_items = [{'title': 'Perfil', 'icon': 'fas fa-user'}] %}
+        {% endif %}
+    {% endif %}
+    
+    {{ render_breadcrumbs(breadcrumb_items) }}
+{% endmacro %} 

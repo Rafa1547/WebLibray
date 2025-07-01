@@ -1,0 +1,211 @@
+<!-- Empty States Component -->
+{% macro empty_state(type='default', title='', message='', action_text='', action_url='', icon='') %}
+<div class="empty-state text-center py-5">
+    {% if type == 'documents' %}
+        <div class="empty-icon mb-4">
+            <i class="fas fa-folder-open" style="font-size: 5rem; color: #e3f2fd;"></i>
+            <div class="empty-icon-overlay">
+                <i class="fas fa-plus-circle text-primary" style="font-size: 2rem; position: absolute; bottom: 0; right: -10px;"></i>
+            </div>
+        </div>
+        <h3 class="text-muted mb-3">{{ title or 'Nenhum documento encontrado' }}</h3>
+        <p class="text-muted mb-4 lead">
+            {{ message or 'Ainda não foram carregados documentos nesta secção. Que tal começar a adicionar alguns recursos educativos?' }}
+        </p>
+        {% if action_url %}
+        <div class="mb-3">
+            <a href="{{ action_url }}" class="btn btn-primary btn-lg animate-pulse">
+                <i class="fas fa-upload me-2"></i>{{ action_text or 'Carregar Primeiro Documento' }}
+            </a>
+        </div>
+        {% endif %}
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title text-primary">
+                            <i class="fas fa-lightbulb me-2"></i>Dica
+                        </h6>
+                        <small class="text-muted">
+                            Organize os seus documentos por disciplina e ano para facilitar a pesquisa. 
+                            Adicione descrições claras para que outros utilizadores encontrem facilmente os recursos.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif type == 'books' %}
+        <div class="empty-icon mb-4" style="position: relative;">
+            <i class="fas fa-books" style="font-size: 5rem; color: #f3e5f5;"></i>
+        </div>
+        <h3 class="text-muted mb-3">{{ title or 'Catálogo vazio' }}</h3>
+        <p class="text-muted mb-4 lead">
+            {{ message or 'O catálogo ainda está em construção. Em breve teremos uma vasta coleção de livros disponíveis!' }}
+        </p>
+        {% if action_url %}
+        <a href="{{ action_url }}" class="btn btn-accent btn-lg">
+            <i class="fas fa-plus me-2"></i>{{ action_text or 'Adicionar Livros' }}
+        </a>
+        {% endif %}
+
+    {% elif type == 'search' %}
+        <div class="empty-icon mb-4">
+            <i class="fas fa-search" style="font-size: 5rem; color: #fff3e0;"></i>
+        </div>
+        <h3 class="text-muted mb-3">{{ title or 'Nenhum resultado encontrado' }}</h3>
+        <p class="text-muted mb-4">
+            {{ message or 'Tente ajustar os termos de pesquisa ou filtros para encontrar o que procura.' }}
+        </p>
+        <div class="search-suggestions">
+            <h6 class="text-primary mb-3">Sugestões:</h6>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <ul class="list-unstyled text-start">
+                        <li class="mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>Verifique a ortografia</li>
+                        <li class="mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>Use termos mais gerais</li>
+                        <li class="mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>Remova alguns filtros</li>
+                        <li class="mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>Tente palavras sinónimas</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    {% elif type == 'loans' %}
+        <div class="empty-icon mb-4">
+            <i class="fas fa-handshake" style="font-size: 5rem; color: #e8f5e8;"></i>
+        </div>
+        <h3 class="text-muted mb-3">{{ title or 'Nenhuma requisição ativa' }}</h3>
+        <p class="text-muted mb-4 lead">
+            {{ message or 'Ainda não fez nenhuma requisição. Explore o catálogo e requisite os livros que lhe interessam!' }}
+        </p>
+        {% if action_url %}
+        <a href="{{ action_url }}" class="btn btn-success btn-lg">
+            <i class="fas fa-book me-2"></i>{{ action_text or 'Explorar Catálogo' }}
+        </a>
+        {% endif %}
+
+    {% elif type == 'error' %}
+        <div class="empty-icon mb-4">
+            <i class="fas fa-exclamation-triangle" style="font-size: 5rem; color: #ffebee;"></i>
+        </div>
+        <h3 class="text-danger mb-3">{{ title or 'Oops! Algo correu mal' }}</h3>
+        <p class="text-muted mb-4">
+            {{ message or 'Ocorreu um erro inesperado. Por favor, tente novamente ou contacte o suporte.' }}
+        </p>
+        <div class="d-flex gap-3 justify-content-center">
+            <button onclick="window.location.reload()" class="btn btn-primary">
+                <i class="fas fa-redo me-2"></i>Tentar Novamente
+            </button>
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-home me-2"></i>Voltar ao Início
+            </a>
+        </div>
+
+    {% else %}
+        <!-- Default empty state -->
+        <div class="empty-icon mb-4">
+            <i class="fas fa-{{ icon or 'inbox' }}" style="font-size: 5rem; color: #f5f5f5;"></i>
+        </div>
+        <h3 class="text-muted mb-3">{{ title or 'Sem conteúdo disponível' }}</h3>
+        <p class="text-muted mb-4">{{ message or 'Não há informações para mostrar neste momento.' }}</p>
+        {% if action_url %}
+        <a href="{{ action_url }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>{{ action_text or 'Adicionar Conteúdo' }}
+        </a>
+        {% endif %}
+    {% endif %}
+</div>
+
+<style>
+.empty-state {
+    padding: 3rem 2rem;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-icon {
+    position: relative;
+    margin-bottom: 2rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.empty-icon-overlay {
+    position: relative;
+    display: inline-block;
+}
+
+.search-suggestions ul {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 0;
+}
+
+.empty-state .btn {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.empty-state .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+/* Spinner sizes */
+.spinner-large {
+    width: 3rem !important;
+    height: 3rem !important;
+}
+
+.spinner-normal {
+    width: 2rem !important;
+    height: 2rem !important;
+}
+
+@media (max-width: 768px) {
+    .empty-state {
+        padding: 2rem 1rem;
+        min-height: 300px;
+    }
+    
+    .empty-icon i {
+        font-size: 3rem !important;
+    }
+}
+</style>
+{% endmacro %}
+
+<!-- Loading State Component -->
+{% macro loading_state(message='A carregar...', size='normal') %}
+<div class="loading-state text-center py-5">
+    <div class="spinner-border text-primary mb-3 {% if size == 'large' %}spinner-large{% else %}spinner-normal{% endif %}" role="status">
+        <span class="visually-hidden">{{ message }}</span>
+    </div>
+    <p class="text-muted">{{ message }}</p>
+</div>
+{% endmacro %}
+
+<!-- Success State Component -->
+{% macro success_state(title, message, action_text='', action_url='') %}
+<div class="success-state text-center py-5">
+    <div class="success-icon mb-4">
+        <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+    </div>
+    <h3 class="text-success mb-3">{{ title }}</h3>
+    <p class="text-muted mb-4 lead">{{ message }}</p>
+    {% if action_url %}
+    <a href="{{ action_url }}" class="btn btn-success btn-lg">
+        {{ action_text }}
+    </a>
+    {% endif %}
+</div>
+{% endmacro %} 

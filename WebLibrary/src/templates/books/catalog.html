@@ -1,0 +1,366 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Catálogo de Livros - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Catálogo de Livros</h1>
+                    <p class="text-muted">Explore nossa coleção de {{ total_records }} livros</p>
+                </div>
+                {% if session.user_type == 'admin' %}
+                <div>
+                    <a href="{{ url_for('books.add_book') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Adicionar Livro
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('books.catalog') }}" class="row g-3">
+                        <!-- Search -->
+                        <div class="col-lg-4 col-md-6">
+                            <label for="search" class="form-label">
+                                <i class="fas fa-search me-1"></i>Pesquisar
+                            </label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="search" 
+                                       name="search" 
+                                       placeholder="Título, autor, ISBN..."
+                                       value="{{ search }}">
+                                {% if search %}
+                                <button type="button" class="btn btn-outline-secondary clear-search" title="Limpar pesquisa">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Category Filter -->
+                        <div class="col-lg-3 col-md-6">
+                            <label for="categoria" class="form-label">
+                                <i class="fas fa-tags me-1"></i>Categoria
+                            </label>
+                            <select class="form-select" id="categoria" name="categoria">
+                                <option value="">Todas as categorias</option>
+                                {% for cat in categorias %}
+                                <option value="{{ cat }}" {% if categoria == cat %}selected{% endif %}>
+                                    {{ cat }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Sort By -->
+                        <div class="col-lg-2 col-md-6">
+                            <label for="sort_by" class="form-label">
+                                <i class="fas fa-sort me-1"></i>Ordenar por
+                            </label>
+                            <select class="form-select" id="sort_by" name="sort_by">
+                                <option value="data_adicao" {% if sort_by == 'data_adicao' %}selected{% endif %}>Data de Adição</option>
+                                <option value="titulo" {% if sort_by == 'titulo' %}selected{% endif %}>Título</option>
+                                <option value="autor" {% if sort_by == 'autor' %}selected{% endif %}>Autor</option>
+                                <option value="categoria" {% if sort_by == 'categoria' %}selected{% endif %}>Categoria</option>
+                                <option value="ano_publicacao" {% if sort_by == 'ano_publicacao' %}selected{% endif %}>Ano</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Order -->
+                        <div class="col-lg-2 col-md-6">
+                            <label for="order" class="form-label">
+                                <i class="fas fa-sort-amount-down me-1"></i>Ordem
+                            </label>
+                            <select class="form-select" id="order" name="order">
+                                <option value="asc" {% if order == 'asc' %}selected{% endif %}>Crescente</option>
+                                <option value="desc" {% if order == 'desc' %}selected{% endif %}>Decrescente</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Items per page -->
+                        <div class="col-lg-1 col-md-6">
+                            <label for="per_page" class="form-label">
+                                <i class="fas fa-list me-1"></i>Por página
+                            </label>
+                            <select class="form-select" id="per_page" name="per_page">
+                                <option value="12" {% if per_page == 12 %}selected{% endif %}>12</option>
+                                <option value="24" {% if per_page == 24 %}selected{% endif %}>24</option>
+                                <option value="48" {% if per_page == 48 %}selected{% endif %}>48</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                            <a href="{{ url_for('books.catalog') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-undo me-1"></i>Limpar Filtros
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    {% if search or categoria %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Mostrando {{ livros|length }} de {{ total_records }} resultados
+                {% if search %}para "<strong>{{ search }}</strong>"{% endif %}
+                {% if categoria %}na categoria "<strong>{{ categoria }}</strong>"{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Books Grid -->
+    <div class="row">
+        {% if livros %}
+            {% for livro in livros %}
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                <div class="book-card">
+                    <div class="book-cover">
+                        {% if livro.capa_url %}
+                        <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" class="w-100 h-100" style="object-fit: cover;">
+                        {% else %}
+                        <i class="fas fa-book"></i>
+                        {% endif %}
+                    </div>
+                    <div class="book-info">
+                        <h6 class="book-title">{{ livro.titulo }}</h6>
+                        <p class="book-author">{{ livro.autor }}</p>
+                        <span class="book-category">{{ livro.categoria }}</span>
+                        
+                        <div class="book-status mt-2">
+                            {% if livro.status == 'disponivel' %}
+                            <span class="status-available">
+                                <i class="fas fa-check-circle me-1"></i>Disponível
+                            </span>
+                            {% else %}
+                            <span class="status-borrowed">
+                                <i class="fas fa-times-circle me-1"></i>Emprestado
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="{{ url_for('books.details', livro_id=livro.id) }}" class="btn btn-primary w-100">
+                                <i class="fas fa-eye me-1"></i>Ver Detalhes
+                            </a>
+                        </div>
+                        
+                        {% if session.user_type == 'admin' %}
+                        <div class="mt-2">
+                            <div class="btn-group w-100" role="group">
+                                <a href="{{ url_for('books.edit_book', livro_id=livro.id) }}" 
+                                   class="btn btn-sm btn-outline-warning" title="Editar livro">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        data-livro-id="{{ livro.id }}"
+                                        data-livro-titulo="{{ livro.titulo }}"
+                                        onclick="confirmDelete(this)" title="Eliminar livro">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Nenhum livro encontrado</h4>
+                <p class="text-muted">
+                    {% if search or categoria %}
+                    Tente ajustar os filtros de pesquisa ou 
+                    <a href="{{ url_for('books.catalog') }}" class="text-decoration-none">ver todos os livros</a>.
+                    {% else %}
+                    O catálogo está vazio no momento.
+                    {% endif %}
+                </p>
+                {% if not search and not categoria %}
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Voltar ao Início
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination">
+                    <!-- Previous Page -->
+                    {% if has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ build_url(page=prev_page) }}" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Page Numbers -->
+                    {% for page_num in page_numbers %}
+                        {% if page_num == '...' %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% elif page_num == page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ build_url(page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Next Page -->
+                    {% if has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ build_url(page=next_page) }}" aria-label="Próxima">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            
+            <!-- Pagination Info -->
+            <div class="text-center text-muted">
+                <small>
+                    Página {{ page }} de {{ total_pages }} 
+                    ({{ total_records }} livros no total)
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when filters change
+    const filterForm = document.querySelector('form');
+    const filterInputs = filterForm.querySelectorAll('select, input[name="per_page"]');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // Reset to page 1 when filters change
+            const pageInput = filterForm.querySelector('input[name="page"]');
+            if (pageInput) {
+                pageInput.value = 1;
+            } else {
+                const hiddenPageInput = document.createElement('input');
+                hiddenPageInput.type = 'hidden';
+                hiddenPageInput.name = 'page';
+                hiddenPageInput.value = 1;
+                filterForm.appendChild(hiddenPageInput);
+            }
+            
+            filterForm.submit();
+        });
+    });
+    
+    // Clear search functionality
+    const clearSearchBtn = document.querySelector('.clear-search');
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            const searchInput = document.getElementById('search');
+            searchInput.value = '';
+            filterForm.submit();
+        });
+    }
+    
+    // Animate book cards
+    const bookCards = document.querySelectorAll('.book-card');
+    bookCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in-up');
+        }, 50 * index);
+    });
+});
+
+function confirmDelete(button) {
+    const livroId = button.dataset.livroId;
+    const livroTitulo = button.dataset.livroTitulo;
+    
+    if (confirm(`Tem certeza que deseja eliminar o livro "${livroTitulo}"?\n\nEsta ação não pode ser desfeita.`)) {
+        // Mostrar indicador de carregamento
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        button.disabled = true;
+        
+        // Criar um formulário para fazer o POST
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/books/delete/${livroId}`;
+        form.style.display = 'none';
+        
+        // Adicionar token CSRF se necessário (para segurança)
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = csrfToken.getAttribute('content');
+            form.appendChild(csrfInput);
+        }
+        
+        // Adicionar ao DOM e submeter
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Adicionar feedback visual aos botões de editar
+document.addEventListener('DOMContentLoaded', function() {
+    const editButtons = document.querySelectorAll('a[href*="/books/edit/"]');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Mostrar indicador de carregamento
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

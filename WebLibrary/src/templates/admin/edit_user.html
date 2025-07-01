@@ -1,0 +1,271 @@
+{% extends "layouts/base.html" %}
+{% from 'components/breadcrumbs.html' import quick_breadcrumb %}
+
+{% block title %}Editar Utilizador - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_users') }}">Utilizadores</a></li>
+            <li class="breadcrumb-item active">Editar {{ user.nome }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-user-edit text-primary me-2"></i>
+                        Editar Utilizador
+                    </h1>
+                    <p class="text-muted mb-0">Modificar dados do utilizador {{ user.nome }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Dados do Utilizador
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+                        <!-- Nome Completo -->
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">
+                                <i class="fas fa-user me-1"></i>Nome Completo
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nome" 
+                                   name="nome" 
+                                   value="{{ user.nome }}"
+                                   required 
+                                   maxlength="100"
+                                   placeholder="Nome completo do utilizador">
+                            <div class="form-text">
+                                Apenas letras, espaços, hífens e apóstrofes são permitidos
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ user.email }}"
+                                   required 
+                                   maxlength="100"
+                                   placeholder="email@exemplo.com">
+                            <div class="form-text">
+                                Email será usado para login no sistema
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Utilizador -->
+                        <div class="mb-4">
+                            <label for="tipo" class="form-label">
+                                <i class="fas fa-user-tag me-1"></i>Tipo de Utilizador
+                            </label>
+                            <select class="form-select" id="tipo" name="tipo" required>
+                                <option value="">Selecione o tipo...</option>
+                                <option value="aluno" {% if user.tipo == 'aluno' %}selected{% endif %}>
+                                    Aluno - Acesso básico para requisições
+                                </option>
+                                <option value="professor" {% if user.tipo == 'professor' %}selected{% endif %}>
+                                    Professor - Pode carregar documentos
+                                </option>
+                                <option value="admin" {% if user.tipo == 'admin' %}selected{% endif %}>
+                                    Administrador - Acesso total
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                <strong>Aluno:</strong> Pode requisitar livros e ver documentos<br>
+                                <strong>Professor:</strong> Pode carregar documentos de estudo<br>
+                                <strong>Admin:</strong> Acesso completo ao sistema
+                            </div>
+                        </div>
+
+                        <!-- Informações Adicionais -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-info-circle text-primary me-1"></i>
+                                            Informações
+                                        </h6>
+                                        <p class="card-text small mb-2">
+                                            <strong>ID:</strong> #{{ user.id }}
+                                        </p>
+                                        <p class="card-text small mb-0">
+                                            <strong>Data de Registo:</strong> 
+                                            {{ user.data_registo|datetime('%d/%m/%Y') if user.data_registo else 'N/A' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-chart-bar text-success me-1"></i>
+                                            Estatísticas
+                                        </h6>
+                                        <p class="card-text small mb-2">
+                                            <strong>Status:</strong> 
+                                            <span class="badge bg-success">Ativo</span>
+                                        </p>
+                                        <p class="card-text small mb-0">
+                                            <strong>Tipo:</strong> 
+                                            <span class="badge bg-primary">{{ user.tipo|title }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i>Cancelar
+                                </a>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="confirmDelete('{{ user.nome }}', {{ user.id }})"
+                                        {% if user.id == session.user_id %}disabled title="Não pode eliminar a sua própria conta"{% endif %}>
+                                    <i class="fas fa-trash me-1"></i>Eliminar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Guardar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Eliminação -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                    Confirmar Eliminação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja eliminar o utilizador <strong id="userName"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>Atenção:</strong> Esta ação não pode ser desfeita.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const nome = document.getElementById('nome').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const tipo = document.getElementById('tipo').value;
+
+        if (!nome || !email || !tipo) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return false;
+        }
+    });
+});
+
+function confirmDelete(userName, userId) {
+    document.getElementById('userName').textContent = userName;
+    document.getElementById('deleteForm').action = `/admin/utilizadores/${userId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %} 

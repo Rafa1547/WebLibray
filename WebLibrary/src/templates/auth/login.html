@@ -1,0 +1,264 @@
+{% extends "layouts/base.html" %}
+{% from 'components/breadcrumbs.html' import quick_breadcrumb %}
+
+{% block title %}Iniciar Sessão{% endblock %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <!-- Logo e Título -->
+            <div class="text-center mb-4">
+                <div class="logo-container mb-3">
+                    <i class="fas fa-university fa-3x text-primary"></i>
+                </div>
+                <h2 class="h3 text-primary">Biblioteca Florbela Espanca</h2>
+                <p class="text-muted">Inicie sessão para aceder ao sistema</p>
+            </div>
+
+            <!-- Formulário de Login -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sessão
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="seu.email@exemplo.com" required
+                                       data-bs-toggle="tooltip" 
+                                       title="Introduza o seu email institucional">
+                            </div>
+                            <div class="invalid-feedback">
+                                Por favor, introduza um email válido.
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-4">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-1"></i>Password
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="A sua password" required
+                                       data-bs-toggle="tooltip" 
+                                       title="Introduza a sua password">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">
+                                Password é obrigatória.
+                            </div>
+                        </div>
+
+                        <!-- Lembrar-me -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                <label class="form-check-label" for="remember">
+                                    Lembrar-me neste dispositivo
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Botão de Login -->
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg ripple">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                            </button>
+                        </div>
+
+                        <!-- Links de apoio -->
+                        <div class="text-center">
+                            <p class="mb-2">
+                                <a href="#" class="text-muted text-decoration-none" onclick="showForgotPassword()">
+                                    <i class="fas fa-question-circle me-1"></i>Esqueceu a password?
+                                </a>
+                            </p>
+                            <p class="mb-0">
+                                Não tem conta? 
+                                <a href="{{ url_for('auth.register') }}" class="text-primary text-decoration-none">
+                                    <i class="fas fa-user-plus me-1"></i>Registe-se aqui
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informações Adicionais -->
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Os seus dados estão protegidos e seguros
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Recuperação de Password -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-key me-2"></i>Recuperar Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Para recuperar a sua password, contacte o administrador do sistema ou a biblioteca.
+                </div>
+                <h6 class="mb-3">Contactos de Apoio:</h6>
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <i class="fas fa-envelope text-primary me-2"></i>
+                        <strong>Email:</strong> biblioteca@esmcargaleiro.pt
+                    </div>
+                    <div class="col-12 mb-2">
+                        <i class="fas fa-phone text-primary me-2"></i>
+                        <strong>Telefone:</strong> Secretaria da Escola
+                    </div>
+                    <div class="col-12">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <strong>Horário:</strong> 8h00 - 17h00 (dias úteis)
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-page {
+    background: linear-gradient(135deg, var(--background-light) 0%, var(--secondary-color) 100%);
+    min-height: 100vh;
+}
+
+.auth-page .card {
+    border: none;
+    border-radius: var(--border-radius-lg);
+}
+
+.auth-page .card-header {
+    background: linear-gradient(135deg, var(--primary-color), #1a2e1f);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.auth-page .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(46, 64, 50, 0.25);
+}
+
+.demo-credentials {
+    background-color: rgba(23, 162, 184, 0.1);
+    border-left: 4px solid var(--info-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-top: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle password visibility
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const password = document.getElementById('password');
+    const icon = this.querySelector('i');
+    
+    if (password.type === 'password') {
+        password.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        password.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+});
+
+// Show forgot password modal
+function showForgotPassword() {
+    const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+    modal.show();
+}
+
+// Form validation
+(function() {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    Array.prototype.slice.call(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>A iniciar sessão...';
+                submitBtn.disabled = true;
+                
+                // Simulate processing time (remove in production)
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 3000);
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+
+// Auto-focus email field
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('email').focus();
+});
+
+// Remember form data (optional)
+const email = localStorage.getItem('rememberedEmail');
+if (email) {
+    document.getElementById('email').value = email;
+    document.getElementById('remember').checked = true;
+}
+
+// Save email if remember is checked
+document.querySelector('form').addEventListener('submit', function() {
+    const emailField = document.getElementById('email');
+    const rememberField = document.getElementById('remember');
+    
+    if (rememberField.checked) {
+        localStorage.setItem('rememberedEmail', emailField.value);
+    } else {
+        localStorage.removeItem('rememberedEmail');
+    }
+});
+</script>
+{% endblock %}
+
