@@ -1,0 +1,295 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Registar - WebLibrary{% endblock %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-custom mt-4">
+                <div class="card-header text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Criar Conta na WebLibrary
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('auth.register') }}" novalidate id="registerForm">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="nome" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Nome Completo
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="nome" 
+                                       name="nome" 
+                                       placeholder="Seu nome completo"
+                                       required
+                                       autocomplete="name">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>Email
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   placeholder="seu@email.com"
+                                   required
+                                   autocomplete="email">
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Utilizaremos este email para comunicações importantes.
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>Password
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Mínimo 6 caracteres"
+                                           required
+                                           autocomplete="new-password">
+                                    <button class="btn btn-outline-secondary" 
+                                            type="button" 
+                                            id="togglePassword"
+                                            data-bs-toggle="tooltip"
+                                            title="Mostrar/Ocultar password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>Confirmar Password
+                                </label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="confirm_password" 
+                                       name="confirm_password" 
+                                       placeholder="Repita a password"
+                                       required
+                                       autocomplete="new-password">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="tipo" class="form-label">
+                                <i class="fas fa-user-tag me-2"></i>Tipo de Utilizador
+                            </label>
+                            <select class="form-select" id="tipo" name="tipo" required>
+                                <option value="">Selecione o tipo de utilizador</option>
+                                <option value="aluno">Aluno</option>
+                                <option value="professor">Professor</option>
+                            </select>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Escolha o tipo que melhor descreve o seu perfil.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="terms" 
+                                       required>
+                                <label class="form-check-label" for="terms">
+                                    Concordo com os 
+                                    <a href="#" class="text-decoration-none">termos de uso</a> 
+                                    e 
+                                    <a href="#" class="text-decoration-none">política de privacidade</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-user-plus me-2"></i>Criar Conta
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-2">Já tem uma conta?</p>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Fazer Login
+                        </a>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <a href="{{ url_for('main.index') }}" class="text-decoration-none">
+                                <i class="fas fa-arrow-left me-1"></i>Voltar à página inicial
+                            </a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-page {
+    background: linear-gradient(135deg, var(--background-light) 0%, var(--secondary-color) 100%);
+    min-height: 100vh;
+}
+
+.auth-page .card {
+    border: none;
+    border-radius: var(--border-radius-lg);
+}
+
+.auth-page .card-header {
+    background: linear-gradient(135deg, var(--primary-color), #1a2e1f);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.auth-page .form-control:focus,
+.auth-page .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(46, 64, 50, 0.25);
+}
+
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.strength-weak { background-color: var(--danger-color); }
+.strength-medium { background-color: var(--warning-color); }
+.strength-strong { background-color: var(--success-color); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registerForm');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const togglePassword = document.getElementById('togglePassword');
+    const emailInput = document.getElementById('email');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Toggle password visibility
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            confirmPasswordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    // Password strength indicator
+    if (passwordInput) {
+        const strengthIndicator = document.createElement('div');
+        strengthIndicator.className = 'password-strength';
+        passwordInput.parentNode.appendChild(strengthIndicator);
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            
+            if (password.length >= 6) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/\d/)) strength++;
+            if (password.match(/[^a-zA-Z\d]/)) strength++;
+            
+            strengthIndicator.style.width = (strength * 25) + '%';
+            
+            if (strength <= 1) {
+                strengthIndicator.className = 'password-strength strength-weak';
+            } else if (strength <= 2) {
+                strengthIndicator.className = 'password-strength strength-medium';
+            } else {
+                strengthIndicator.className = 'password-strength strength-strong';
+            }
+        });
+    }
+    
+    // Real-time email validation
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const email = this.value.trim().toLowerCase();
+            if (email && WebLibrary.validateEmail({ target: this })) {
+                // Check if email exists
+                fetch('/check-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        this.classList.add('is-invalid');
+                        this.classList.remove('is-valid');
+                        
+                        let feedback = this.parentNode.querySelector('.invalid-feedback');
+                        if (!feedback) {
+                            feedback = document.createElement('div');
+                            feedback.className = 'invalid-feedback';
+                            this.parentNode.appendChild(feedback);
+                        }
+                        feedback.textContent = 'Este email já está registado.';
+                    }
+                })
+                .catch(error => console.error('Erro ao verificar email:', error));
+            }
+        });
+    }
+    
+    // Form submission with loading state
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (this.checkValidity()) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Criando conta...';
+            }
+        });
+    }
+    
+    // Auto-focus no primeiro campo
+    const nomeInput = document.getElementById('nome');
+    if (nomeInput) {
+        nomeInput.focus();
+    }
+    
+    // Animação de entrada
+    const card = document.querySelector('.card');
+    if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease-out';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100);
+    }
+});
+</script>
+{% endblock %}
+

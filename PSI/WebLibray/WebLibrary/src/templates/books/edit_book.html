@@ -1,0 +1,324 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Editar Livro - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Editar Livro</h1>
+                    <p class="text-muted">Atualizar informações do livro "{{ livro.titulo }}"</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('books.details', livro_id=livro.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar aos Detalhes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Informações do Livro
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('books.edit_book', livro_id=livro.id) }}" enctype="multipart/form-data">
+                        <!-- Título -->
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label">
+                                <i class="fas fa-heading me-1"></i>Título *
+                            </label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" 
+                                   value="{{ livro.titulo }}" required>
+                        </div>
+
+                        <!-- Autor -->
+                        <div class="mb-3">
+                            <label for="autor" class="form-label">
+                                <i class="fas fa-user-edit me-1"></i>Autor *
+                            </label>
+                            <input type="text" class="form-control" id="autor" name="autor" 
+                                   value="{{ livro.autor }}" required>
+                        </div>
+
+                        <!-- ISBN e Ano -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="isbn" class="form-label">
+                                        <i class="fas fa-barcode me-1"></i>ISBN <small class="text-muted">(opcional)</small>
+                                    </label>
+                                    <input type="text" class="form-control" id="isbn" name="isbn" 
+                                           value="{{ livro.isbn or '' }}" placeholder="978-0-123456-78-9 (opcional)">
+                                    <div class="form-text">O ISBN é opcional. Pode deixar em branco se não souber.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="ano" class="form-label">
+                                        <i class="fas fa-calendar me-1"></i>Ano de Publicação
+                                    </label>
+                                    <input type="number" class="form-control" id="ano" name="ano" 
+                                           value="{{ livro.ano or '' }}" min="1000" max="2030">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categoria e Editora -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="categoria" class="form-label">
+                                        <i class="fas fa-tags me-1"></i>Categoria *
+                                    </label>
+                                    <select class="form-select" id="categoria" name="categoria" required>
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="Arte" {{ 'selected' if livro.categoria == 'Arte' }}>Arte</option>
+                                        <option value="Autoajuda" {{ 'selected' if livro.categoria == 'Autoajuda' }}>Autoajuda</option>
+                                        <option value="Biografia" {{ 'selected' if livro.categoria == 'Biografia' }}>Biografia</option>
+                                        <option value="Ciência" {{ 'selected' if livro.categoria == 'Ciência' }}>Ciência</option>
+                                        <option value="Culinária" {{ 'selected' if livro.categoria == 'Culinária' }}>Culinária</option>
+                                        <option value="Direito" {{ 'selected' if livro.categoria == 'Direito' }}>Direito</option>
+                                        <option value="Economia" {{ 'selected' if livro.categoria == 'Economia' }}>Economia</option>
+                                        <option value="Educação" {{ 'selected' if livro.categoria == 'Educação' }}>Educação</option>
+                                        <option value="Desporto" {{ 'selected' if livro.categoria == 'Desporto' }}>Desporto</option>
+                                        <option value="Ficção" {{ 'selected' if livro.categoria == 'Ficção' }}>Ficção</option>
+                                        <option value="Ficção Científica" {{ 'selected' if livro.categoria == 'Ficção Científica' }}>Ficção Científica</option>
+                                        <option value="Filosofia" {{ 'selected' if livro.categoria == 'Filosofia' }}>Filosofia</option>
+                                        <option value="Geografia" {{ 'selected' if livro.categoria == 'Geografia' }}>Geografia</option>
+                                        <option value="História" {{ 'selected' if livro.categoria == 'História' }}>História</option>
+                                        <option value="Infantil" {{ 'selected' if livro.categoria == 'Infantil' }}>Infantil</option>
+                                        <option value="Literatura Clássica" {{ 'selected' if livro.categoria == 'Literatura Clássica' }}>Literatura Clássica</option>
+                                        <option value="Línguas" {{ 'selected' if livro.categoria == 'Línguas' }}>Línguas</option>
+                                        <option value="Matemática" {{ 'selected' if livro.categoria == 'Matemática' }}>Matemática</option>
+                                        <option value="Medicina e Saúde" {{ 'selected' if livro.categoria == 'Medicina e Saúde' }}>Medicina e Saúde</option>
+                                        <option value="Psicologia" {{ 'selected' if livro.categoria == 'Psicologia' }}>Psicologia</option>
+                                        <option value="Religião" {{ 'selected' if livro.categoria == 'Religião' }}>Religião</option>
+                                        <option value="Romance" {{ 'selected' if livro.categoria == 'Romance' }}>Romance</option>
+                                        <option value="Tecnologia" {{ 'selected' if livro.categoria == 'Tecnologia' }}>Tecnologia</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editora" class="form-label">
+                                        <i class="fas fa-building me-1"></i>Editora
+                                    </label>
+                                    <input type="text" class="form-control" id="editora" name="editora" 
+                                           value="{{ livro.editora or '' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Páginas e Idioma -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="paginas" class="form-label">
+                                        <i class="fas fa-file-alt me-1"></i>Número de Páginas
+                                    </label>
+                                    <input type="number" class="form-control" id="paginas" name="paginas" 
+                                           value="{{ livro.paginas or '' }}" min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="idioma" class="form-label">
+                                        <i class="fas fa-language me-1"></i>Idioma
+                                    </label>
+                                    <select class="form-select" id="idioma" name="idioma">
+                                        <option value="Português" {{ 'selected' if livro.idioma == 'Português' }}>Português</option>
+                                        <option value="Inglês" {{ 'selected' if livro.idioma == 'Inglês' }}>Inglês</option>
+                                        <option value="Espanhol" {{ 'selected' if livro.idioma == 'Espanhol' }}>Espanhol</option>
+                                        <option value="Francês" {{ 'selected' if livro.idioma == 'Francês' }}>Francês</option>
+                                        <option value="Alemão" {{ 'selected' if livro.idioma == 'Alemão' }}>Alemão</option>
+                                        <option value="Italiano" {{ 'selected' if livro.idioma == 'Italiano' }}>Italiano</option>
+                                        <option value="Outro" {{ 'selected' if livro.idioma == 'Outro' }}>Outro</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descrição -->
+                        <div class="mb-3">
+                            <label for="descricao" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Descrição
+                            </label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="4">{{ livro.descricao or '' }}</textarea>
+                        </div>
+
+                        <!-- Status e Localização -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">
+                                        <i class="fas fa-info-circle me-1"></i>Status
+                                    </label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="disponivel" {{ 'selected' if livro.status == 'disponivel' }}>Disponível</option>
+                                        <option value="emprestado" {{ 'selected' if livro.status == 'emprestado' }}>Emprestado</option>
+                                        <option value="manutencao" {{ 'selected' if livro.status == 'manutencao' }}>Em Manutenção</option>
+                                        <option value="perdido" {{ 'selected' if livro.status == 'perdido' }}>Perdido</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="localizacao" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-1"></i>Localização
+                                    </label>
+                                    <input type="text" class="form-control" id="localizacao" name="localizacao" 
+                                           value="{{ livro.localizacao or '' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('books.details', livro_id=livro.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>Pré-visualização
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="book-preview">
+                        <div class="book-cover mb-3">
+                            <img id="preview-cover" src="{{ livro.capa_url if livro.capa_url else '/static/images/covers/placeholder.jpg' }}" 
+                                 alt="Capa do livro" class="img-fluid rounded">
+                        </div>
+                        <h6 id="preview-title" class="fw-bold">{{ livro.titulo }}</h6>
+                        <p id="preview-author" class="text-muted mb-2">{{ livro.autor }}</p>
+                        <div class="mb-2">
+                            <span id="preview-category" class="badge bg-primary">{{ livro.categoria }}</span>
+                        </div>
+                        <div class="book-details">
+                            <small class="text-muted">
+                                <div id="preview-year">Ano: {{ livro.ano or '-' }}</div>
+                                <div id="preview-pages">Páginas: {{ livro.paginas or '-' }}</div>
+                                <div id="preview-language">Idioma: {{ livro.idioma or 'Português' }}</div>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload de Capa -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-image me-2"></i>Capa do Livro
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="capa" class="form-label">Upload da Capa</label>
+                        <input type="file" class="form-control" id="capa" name="capa" 
+                               accept="image/*" onchange="previewImage(this)">
+                        <div class="form-text">Formatos aceites: JPG, PNG, GIF (máx. 2MB)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Preview em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const fields = {
+        'titulo': 'preview-title',
+        'autor': 'preview-author',
+        'categoria': 'preview-category',
+        'ano': 'preview-year',
+        'paginas': 'preview-pages',
+        'idioma': 'preview-language'
+    };
+
+    Object.keys(fields).forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        const preview = document.getElementById(fields[fieldId]);
+
+        field.addEventListener('input', function() {
+            let value = this.value || (fieldId === 'titulo' ? '{{ livro.titulo }}' : 
+                                      fieldId === 'autor' ? '{{ livro.autor }}' : 
+                                      fieldId === 'categoria' ? '{{ livro.categoria }}' : '-');
+            
+            if (fieldId === 'ano') {
+                value = value ? `Ano: ${value}` : 'Ano: -';
+            } else if (fieldId === 'paginas') {
+                value = value ? `Páginas: ${value}` : 'Páginas: -';
+            } else if (fieldId === 'idioma') {
+                value = `Idioma: ${value}`;
+            }
+            
+            preview.textContent = value;
+        });
+    });
+
+    // Validação do ISBN (opcional)
+    document.getElementById('isbn').addEventListener('input', function() {
+        const isbn = this.value.replace(/[^0-9X-]/g, '');
+        // ISBN é opcional, apenas dar feedback visual se preenchido
+        if (isbn.length === 0) {
+            this.classList.remove('is-valid', 'is-invalid', 'is-warning');
+        } else if (isbn.length === 10 || isbn.length === 13) {
+            this.classList.remove('is-invalid', 'is-warning');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid', 'is-invalid');
+            this.classList.add('is-warning');
+        }
+    });
+});
+
+// Preview da imagem
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-cover').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Validação do formulário
+document.querySelector('form').addEventListener('submit', function(e) {
+    const titulo = document.getElementById('titulo').value.trim();
+    const autor = document.getElementById('autor').value.trim();
+    const categoria = document.getElementById('categoria').value;
+
+    if (!titulo || !autor || !categoria) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios (Título, Autor, Categoria).');
+        return false;
+    }
+});
+</script>
+{% endblock %}
+

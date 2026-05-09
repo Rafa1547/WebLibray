@@ -1,0 +1,275 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Gerir Utilizadores - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Gerir Utilizadores</h1>
+                    <p class="text-muted">Administrar contas de utilizadores do sistema</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.add_user') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Novo Utilizador
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros e Pesquisa -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Pesquisar</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   placeholder="Nome ou email..." value="{{ request.args.get('search', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="tipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="tipo" name="tipo">
+                                <option value="">Todos os tipos</option>
+                                <option value="admin" {{ 'selected' if request.args.get('tipo') == 'admin' }}>Administrador</option>
+                                <option value="professor" {{ 'selected' if request.args.get('tipo') == 'professor' }}>Professor</option>
+                                <option value="aluno" {{ 'selected' if request.args.get('tipo') == 'aluno' }}>Aluno</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Todos</option>
+                                <option value="ativo" {{ 'selected' if request.args.get('status') == 'ativo' }}>Ativo</option>
+                                <option value="inativo" {{ 'selected' if request.args.get('status') == 'inativo' }}>Inativo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-1"></i>Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Utilizadores -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Lista de Utilizadores
+                        <span class="badge bg-secondary ms-2">{{ utilizadores|length if utilizadores else 1 }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if utilizadores %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Utilizador</th>
+                                    <th>Email</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th>Requisições</th>
+                                    <th>Último Acesso</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in utilizadores %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar me-3">
+                                                <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ user.nome }}</div>
+                                                <small class="text-muted">ID: {{ user.id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.tipo == 'admin' %}
+                                        <span class="badge bg-danger">Administrador</span>
+                                        {% elif user.tipo == 'professor' %}
+                                        <span class="badge bg-warning">Professor</span>
+                                        {% else %}
+                                        <span class="badge bg-info">Aluno</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ user.emprestimos_ativos or 0 }}</span>
+                                    </td>
+                                    <td>
+                                        <small>{{ user.ultimo_acesso or 'Nunca' }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('admin.reset_user_password', user_id=user.id) }}" 
+                                               class="btn btn-sm btn-outline-warning" title="Reset Password">
+                                                <i class="fas fa-key"></i>
+                                            </a>
+                                            {% if user.tipo != 'admin' %}
+                                            <button class="btn btn-sm btn-outline-danger delete-user-btn" 
+                                                    data-user-id="{{ user.id }}" 
+                                                    data-user-name="{{ user.nome }}" 
+                                                    title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <!-- Dados de exemplo se não houver utilizadores -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Utilizador</th>
+                                    <th>Email</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th>Requisições</th>
+                                    <th>Último Acesso</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar me-3">
+                                                <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Administrador</div>
+                                                <small class="text-muted">ID: 1</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>admin@weblibrary.com</td>
+                                    <td><span class="badge bg-danger">Administrador</span></td>
+                                    <td><span class="badge bg-success">Ativo</span></td>
+                                    <td><span class="badge bg-primary">0</span></td>
+                                    <td><small>26/06/2025 21:47</small></td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="#" class="btn btn-sm btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="#" class="btn btn-sm btn-outline-info" title="Ver Perfil">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Eliminação -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja eliminar o utilizador <strong id="userName"></strong>?</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Esta ação não pode ser desfeita.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(userId, userName) {
+    document.getElementById('userName').textContent = userName;
+    document.getElementById('deleteForm').action = `/admin/utilizadores/${userId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit do formulário de filtros quando os selects mudam
+    const filters = document.querySelectorAll('#tipo, #status');
+    filters.forEach(filter => {
+        filter.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+    
+    // Pesquisa em tempo real (com debounce)
+    const searchInput = document.getElementById('search');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            this.form.submit();
+        }, 500);
+    });
+    
+    // Event listeners para botões de delete
+    const deleteButtons = document.querySelectorAll('.delete-user-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const userName = this.getAttribute('data-user-name');
+            confirmDelete(userId, userName);
+        });
+    });
+});
+</script>
+{% endblock %}
+

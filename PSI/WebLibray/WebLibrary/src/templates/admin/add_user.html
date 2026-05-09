@@ -1,0 +1,181 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Adicionar Utilizador - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Adicionar Novo Utilizador</h1>
+                    <p class="text-muted">Criar uma nova conta de utilizador no sistema</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Informações do Utilizador
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.add_user') }}">
+                        <!-- Nome -->
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">
+                                <i class="fas fa-user me-1"></i>Nome Completo
+                            </label>
+                            <input type="text" class="form-control" id="nome" name="nome" 
+                                   placeholder="Nome completo do utilizador" required>
+                            <div class="form-text">Introduza o nome completo do utilizador</div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="email@exemplo.com" required>
+                            <div class="form-text">O email será usado para fazer login no sistema</div>
+                        </div>
+
+                        <!-- Tipo de Utilizador -->
+                        <div class="mb-3">
+                            <label for="tipo" class="form-label">
+                                <i class="fas fa-user-tag me-1"></i>Tipo de Utilizador
+                            </label>
+                            <select class="form-select" id="tipo" name="tipo" required>
+                                <option value="">Selecione o tipo de utilizador</option>
+                                <option value="aluno">Aluno</option>
+                                <option value="professor">Professor</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                            <div class="form-text">
+                                <strong>Aluno:</strong> Pode emprestar livros e gerir o próprio perfil<br>
+                                <strong>Professor:</strong> Pode emprestar livros com privilégios estendidos<br>
+                                <strong>Administrador:</strong> Acesso completo ao sistema
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-key me-1"></i>Password
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Password segura" required minlength="6">
+                                <button class="btn btn-outline-secondary" type="button" 
+                                        onclick="togglePassword('password')" aria-label="Mostrar/Ocultar password">
+                                    <i class="fas fa-eye" id="password-icon"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">A password deve ter pelo menos 6 caracteres</div>
+                        </div>
+
+                        <!-- Confirmar Password -->
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">
+                                <i class="fas fa-key me-1"></i>Confirmar Password
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                       placeholder="Confirme a password" required minlength="6">
+                                <button class="btn btn-outline-secondary" type="button" 
+                                        onclick="togglePassword('confirm_password')" aria-label="Mostrar/Ocultar password">
+                                    <i class="fas fa-eye" id="confirm_password-icon"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Repita a password para confirmação</div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Criar Utilizador
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '-icon');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    
+    // Validação de passwords em tempo real
+    function validatePasswords() {
+        if (password.value !== confirmPassword.value) {
+            confirmPassword.setCustomValidity('As passwords não coincidem');
+        } else {
+            confirmPassword.setCustomValidity('');
+        }
+    }
+    
+    password.addEventListener('input', validatePasswords);
+    confirmPassword.addEventListener('input', validatePasswords);
+    
+    // Validação do email
+    const email = document.getElementById('email');
+    email.addEventListener('blur', function() {
+        if (this.value) {
+            // Verificar se o email já existe (simulado)
+            // Em produção, faria uma chamada AJAX para verificar
+        }
+    });
+    
+    // Submissão do formulário
+    form.addEventListener('submit', function(e) {
+        if (password.value !== confirmPassword.value) {
+            e.preventDefault();
+            alert('As passwords não coincidem!');
+            return false;
+        }
+        
+        if (password.value.length < 6) {
+            e.preventDefault();
+            alert('A password deve ter pelo menos 6 caracteres!');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}
+

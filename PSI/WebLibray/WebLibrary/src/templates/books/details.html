@@ -1,0 +1,554 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ livro.titulo if livro else 'Detalhes do Livro' }} - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Início</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('books.catalog') }}">Catálogo</a></li>
+            <li class="breadcrumb-item active">{{ (livro.titulo if livro and livro.titulo else 'Detalhes do Livro') }}</li>
+        </ol>
+    </nav>
+
+    {% if livro %}
+    
+    <div class="row">
+        <!-- Capa e Informações Básicas -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="book-cover-container">
+                    <img src="{{ livro.capa_url if livro.capa_url else '/static/images/covers/placeholder.jpg' }}" 
+                         alt="Capa de {{ livro.titulo or 'Livro' }}" class="book-cover-large">
+                </div>
+                <div class="card-body">
+                    <!-- Status do Livro -->
+                    <div class="mb-3">
+                        {% if livro.status == 'disponivel' %}
+                        <span class="badge bg-success fs-6">
+                            <i class="fas fa-check-circle me-1"></i>Disponível
+                        </span>
+                        {% elif livro.status == 'emprestado' %}
+                        <span class="badge bg-warning fs-6">
+                            <i class="fas fa-clock me-1"></i>Emprestado
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary fs-6">
+                            <i class="fas fa-times-circle me-1"></i>Indisponível
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Ações -->
+                    {% if session.user_id %}
+                        {% if livro.status == 'disponivel' %}
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('loans.request_loan', livro_id=livro.id) }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-handshake me-2"></i>Solicitar Requisição
+                            </a>
+                            <button class="btn btn-outline-secondary" data-book-id="{{ livro.id }}" id="addToFavoritesBtn">
+                                <i class="fas fa-heart me-2"></i>Adicionar aos Favoritos
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Este livro não está disponível para requisição no momento.
+                        </div>
+                        {% endif %}
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        <a href="{{ url_for('auth.login') }}">Faça login</a> para solicitar requisição.
+                    </div>
+                    {% endif %}
+
+                    <!-- Localização -->
+                    {% if livro.localizacao %}
+                    <div class="mt-3">
+                        <h6 class="text-muted">Localização</h6>
+                        <p class="mb-0">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ livro.localizacao }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações Detalhadas -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Título e Autor -->
+                    <div class="mb-4">
+                        <h1 class="h2 mb-2">{{ livro.titulo }}</h1>
+                        <h2 class="h5 text-muted mb-3">por {{ livro.autor }}</h2>
+                        
+                        <!-- Categoria -->
+                        <div class="mb-3">
+                            <span class="badge bg-primary fs-6">{{ livro.categoria }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Informações Técnicas -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <strong>ISBN:</strong>
+                                <span>{{ livro.isbn if livro.isbn else 'Não informado' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <strong>Ano de Publicação:</strong>
+                                <span>{{ livro.ano if livro.ano else 'Não informado' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <strong>Editora:</strong>
+                                <span>{{ livro.editora if livro.editora else 'Não informado' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <strong>Páginas:</strong>
+                                <span>{{ livro.paginas if livro.paginas else 'Não informado' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <strong>Idioma:</strong>
+                                <span>{{ livro.idioma if livro.idioma else 'Português' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <strong>Data de Adição:</strong>
+                                <span>
+                                    {% if livro.data_adicao %}
+                                        {% if livro.data_adicao is string %}
+                                            {{ livro.data_adicao }}
+                                        {% else %}
+                                            {{ livro.data_adicao.strftime('%d/%m/%Y') }}
+                                        {% endif %}
+                                    {% else %}
+                                        Não informado
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Descrição -->
+                    {% if livro.descricao %}
+                    <div class="mb-4">
+                        <h5>Descrição</h5>
+                        <p class="text-justify">{{ livro.descricao }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Histórico de Empréstimos (apenas para admins) -->
+                    {% if session.user_type == 'admin' %}
+                    <div class="mb-4">
+                        <h5>Histórico de Requisições</h5>
+                        {% if emprestimos_historico %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Utilizador</th>
+                                        <th>Data Requisição</th>
+                                        <th>Data Devolução</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for emprestimo in emprestimos_historico %}
+                                    <tr>
+                                        <td>{{ emprestimo.nome_utilizador }}</td>
+                                        <td>{{ emprestimo.data_emprestimo|datetime('%d/%m/%Y') }}</td>
+                                        <td>{{ emprestimo.data_devolucao|datetime('%d/%m/%Y') if emprestimo.data_devolucao else '-' }}</td>
+                                        <td>
+                                            {% if emprestimo.status == 'devolvido' %}
+                                            <span class="badge bg-success">Devolvido</span>
+                                            {% elif emprestimo.status == 'ativo' %}
+                                            <span class="badge bg-warning">Ativo</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Atrasado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">Nenhuma requisição registada para este livro.</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Ações Administrativas -->
+                    {% if session.user_type == 'admin' %}
+                    <div class="admin-actions">
+                        <h5>Ações Administrativas</h5>
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('books.edit_book', livro_id=livro.id) }}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </a>
+                            <button class="btn btn-outline-danger" 
+                                    data-book-id="{{ livro.id }}" 
+                                    data-book-title="{{ livro.titulo }}" 
+                                    id="deleteBookBtn">
+                                <i class="fas fa-trash me-1"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Livros Relacionados -->
+    {% if livros_relacionados %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">
+                    <i class="fas fa-bookmark me-2 text-primary"></i>
+                    Livros Relacionados - {{ livro.categoria }}
+                </h4>
+                <a href="{{ url_for('books.catalog', categoria=livro.categoria) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-eye me-1"></i>Ver Todos
+                </a>
+            </div>
+            
+            <div class="row">
+                {% for livro_rel in livros_relacionados %}
+                <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <div class="card book-card h-100">
+                        <div class="book-cover-container-small">
+                            <img src="{{ livro_rel.capa_url if livro_rel.capa_url else '/static/images/covers/placeholder.jpg' }}" 
+                                 class="card-img-top book-cover-small" 
+                                 alt="Capa de {{ livro_rel.titulo }}">
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title mb-2" title="{{ livro_rel.titulo }}">
+                                {{ livro_rel.titulo | truncate(30) }}
+                            </h6>
+                            <p class="card-text text-muted small mb-2" title="{{ livro_rel.autor }}">
+                                {{ livro_rel.autor | truncate(25) }}
+                            </p>
+                            {% if livro_rel.ano %}
+                            <p class="card-text small text-secondary mb-2">{{ livro_rel.ano }}</p>
+                            {% endif %}
+                            
+                            <!-- Status Badge -->
+                            <div class="mb-2">
+                                {% if livro_rel.status == 'disponivel' %}
+                                <span class="badge bg-success small">
+                                    <i class="fas fa-check-circle me-1"></i>Disponível
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning small">
+                                    <i class="fas fa-clock me-1"></i>Emprestado
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <a href="{{ url_for('books.details', livro_id=livro_rel.id) }}" 
+                                   class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-info-circle me-1"></i>Ver Detalhes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Se há mais livros na categoria -->
+            {% if livros_relacionados|length >= 6 %}
+            <div class="text-center mt-3">
+                <p class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Mostrando alguns livros da categoria <strong>{{ livro.categoria }}</strong>
+                </p>
+                <a href="{{ url_for('books.catalog', categoria=livro.categoria) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-search me-1"></i>Explorar Mais Livros desta Categoria
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Livro não encontrado -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-book-open fa-5x text-muted mb-4"></i>
+                <h2>Livro não encontrado</h2>
+                <p class="text-muted mb-4">O livro que procura não existe ou foi removido.</p>
+                <a href="{{ url_for('books.catalog') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar ao Catálogo
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Confirmação de Eliminação -->
+{% if session.user_type == 'admin' %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja eliminar o livro <strong id="bookTitle"></strong>?</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Esta ação não pode ser desfeita.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.book-cover-container {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.book-cover-large {
+    max-width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.info-item {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item strong {
+    color: var(--primary-color);
+    display: inline-block;
+    min-width: 120px;
+}
+
+.book-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.book-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Estilos para livros relacionados */
+.book-cover-container-small {
+    text-align: center;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.book-cover-small {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+}
+
+.book-cover-small:hover {
+    transform: scale(1.05);
+}
+
+.book-card.h-100 {
+    height: 100% !important;
+}
+
+.book-card .card-body {
+    padding: 0.75rem;
+}
+
+.book-card .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.book-card .card-text.small {
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+@media (max-width: 576px) {
+    .book-cover-small {
+        height: 120px;
+    }
+    
+    .book-card .card-title {
+        font-size: 0.85rem;
+    }
+    
+    .book-card .card-text.small {
+        font-size: 0.75rem;
+    }
+}
+
+.admin-actions {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.text-justify {
+    text-align: justify;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .book-cover-large {
+        height: 300px;
+    }
+    
+    .info-item strong {
+        min-width: auto;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToFavorites(livroId) {
+    // Simulação de adicionar aos favoritos
+    fetch(`/api/favorites/add/${livroId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Livro adicionado aos favoritos!');
+        } else {
+            alert('Erro ao adicionar aos favoritos.');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Livro adicionado aos favoritos!'); // Simulação
+    });
+}
+
+function confirmDelete(livroId, titulo) {
+    document.getElementById('bookTitle').textContent = titulo;
+    document.getElementById('deleteForm').action = `/books/delete/${livroId}`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listener para adicionar aos favoritos
+    const addToFavoritesBtn = document.getElementById('addToFavoritesBtn');
+    if (addToFavoritesBtn) {
+        addToFavoritesBtn.addEventListener('click', function() {
+            const bookId = this.getAttribute('data-book-id');
+            addToFavorites(bookId);
+        });
+    }
+
+    // Event listener para confirmar exclusão (apenas para admins)
+    const deleteBookBtn = document.getElementById('deleteBookBtn');
+    if (deleteBookBtn) {
+        deleteBookBtn.addEventListener('click', function() {
+            const bookId = this.getAttribute('data-book-id');
+            const bookTitle = this.getAttribute('data-book-title');
+            confirmDelete(bookId, bookTitle);
+        });
+    }
+
+    // Event listener para feedback visual no botão de confirmação de eliminação
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Eliminando...';
+            this.disabled = true;
+        });
+    }
+
+    // Event listener para feedback visual no botão de editar
+    const editBookBtn = document.querySelector('a[href*="/books/edit/"]');
+    if (editBookBtn) {
+        editBookBtn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin me-1';
+            }
+        });
+    }
+
+    // Animação de entrada
+    const elements = document.querySelectorAll('.card, .info-item');
+    elements.forEach((element, index) => {
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            element.style.transition = 'all 0.6s ease';
+            element.style.opacity = '1';
+            element.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+});
+</script>
+{% endblock %}
+

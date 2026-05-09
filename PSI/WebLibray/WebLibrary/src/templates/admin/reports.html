@@ -1,0 +1,522 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Relatórios - WebLibrary{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Relatórios e Estatísticas</h1>
+                    <p class="text-muted">Análise detalhada da utilização da biblioteca</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de Período -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="data_inicio" class="form-label">Data Início</label>
+                            <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                                   value="{{ request.args.get('data_inicio', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="data_fim" class="form-label">Data Fim</label>
+                            <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                                   value="{{ request.args.get('data_fim', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="periodo" class="form-label">Período Predefinido</label>
+                            <select class="form-select" id="periodo" name="periodo">
+                                <option value="">Personalizado</option>
+                                <option value="7dias" {{ 'selected' if request.args.get('periodo') == '7dias' }}>Últimos 7 dias</option>
+                                <option value="30dias" {{ 'selected' if request.args.get('periodo') == '30dias' }}>Últimos 30 dias</option>
+                                <option value="3meses" {{ 'selected' if request.args.get('periodo') == '3meses' }}>Últimos 3 meses</option>
+                                <option value="ano" {{ 'selected' if request.args.get('periodo') == 'ano' }}>Este ano</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-chart-line me-1"></i>Gerar Relatório
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas Gerais -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-primary">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stats-number">{{ total_livros }}</div>
+                <div class="stats-label">Total de Livros</div>
+                <div class="stats-detail">
+                    <small class="text-success">{{ livros_disponiveis }} disponíveis</small> • 
+                    <small class="text-warning">{{ livros_emprestados }} emprestados</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-info">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-number">{{ total_utilizadores }}</div>
+                <div class="stats-label">Utilizadores Registados</div>
+                <div class="stats-detail">
+                    <small class="text-muted">{{ total_categorias }} categorias de livros</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-warning">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="stats-number">{{ total_emprestimos }}</div>
+                <div class="stats-label">Total Requisições</div>
+                <div class="stats-detail">
+                    <small class="text-info">{{ emprestimos_ativos }} ativos</small> • 
+                    <small class="text-success">{{ emprestimos_devolvidos }} devolvidos</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-success">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stats-number">{{ taxa_utilizacao }}%</div>
+                <div class="stats-label">Taxa de Utilização</div>
+                <div class="stats-detail">
+                    {% if emprestimos_atrasados > 0 %}
+                    <small class="text-danger">{{ emprestimos_atrasados }} em atraso</small>
+                    {% else %}
+                    <small class="text-success">Sem atrasos!</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Requisições por Mês</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="emprestimosChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Categorias Mais Populares</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoriasChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Livros e Utilizadores -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>Top 10 Livros Mais Requisitados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Livro</th>
+                                    <th>Autor</th>
+                                    <th>Empréstimos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if top_livros %}
+                                    {% for livro in top_livros %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ livro[0] }}</td>
+                                        <td>{{ livro[1] }}</td>
+                                        <td><span class="badge bg-primary">{{ livro[2] }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if top_livros|length < 10 %}
+                                        {% for i in range(top_livros|length + 1, 11) %}
+                                        <tr class="text-muted">
+                                            <td>{{ i }}</td>
+                                            <td colspan="3">-</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Nenhuma requisição registada no período selecionado
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Utilizadores Mais Ativos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Utilizador</th>
+                                    <th>Tipo</th>
+                                    <th>Requisições</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if utilizadores_ativos %}
+                                    {% for utilizador in utilizadores_ativos %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>
+                                            {{ utilizador[0] }}
+                                            <br><small class="text-muted">{{ utilizador[1] }}</small>
+                                        </td>
+                                        <td>
+                                            {% if utilizador[2] == 'admin' %}
+                                            <span class="badge bg-danger">Admin</span>
+                                            {% elif utilizador[2] == 'professor' %}
+                                            <span class="badge bg-info">Professor</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Aluno</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="badge bg-primary">{{ utilizador[3] }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if utilizadores_ativos|length < 10 %}
+                                        {% for i in range(utilizadores_ativos|length + 1, 11) %}
+                                        <tr class="text-muted">
+                                            <td>{{ i }}</td>
+                                            <td colspan="3">-</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Nenhuma atividade de requisição registada no período selecionado
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relatório de Atrasos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Requisições em Atraso
+                        {% if emprestimos_atrasados > 0 %}
+                        <span class="badge bg-danger ms-2">{{ emprestimos_atrasados }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if atrasos_detalhados %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Livro</th>
+                                    <th>Utilizador</th>
+                                    <th>Data Requisição</th>
+                                    <th>Data Prevista</th>
+                                    <th>Dias de Atraso</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for atraso in atrasos_detalhados %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ atraso[0] }}</strong>
+                                        <br><small class="text-muted">{{ atraso[1] }}</small>
+                                    </td>
+                                    <td>
+                                        {{ atraso[2] }}
+                                        <br><small class="text-muted">{{ atraso[3] }}</small>
+                                    </td>
+                                    <td>{{ atraso[4] }}</td>
+                                    <td>{{ atraso[5] }}</td>
+                                    <td>
+                                        <span class="badge bg-danger">
+                                            {{ atraso[6] }} dia{{ 's' if atraso[6] != 1 else '' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-warning" title="Enviar lembrete">
+                                            <i class="fas fa-bell"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" title="Contactar utilizador">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5 class="text-success">Excelente!</h5>
+                        <p class="text-muted">Não há requisições em atraso no momento.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stats-label {
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.stats-change {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.stats-detail {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+}
+
+.bg-primary { background: var(--primary-color) !important; }
+.bg-info { background: var(--info-color) !important; }
+.bg-warning { background: var(--warning-color) !important; }
+.bg-success { background: var(--success-color) !important; }
+
+@media print {
+    .btn, .card-header {
+        -webkit-print-color-adjust: exact;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Dados dos gráficos em JSON -->
+<script type="application/json" id="chart-data-emprestimos">{{ chart_data | tojson | safe }}</script>
+<script type="application/json" id="chart-data-categorias">{{ categorias_chart | tojson | safe }}</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Carregar dados dos gráficos
+function getChartData() {
+    const emprestimosData = JSON.parse(document.getElementById('chart-data-emprestimos').textContent);
+    const categoriasData = JSON.parse(document.getElementById('chart-data-categorias').textContent);
+    
+    return {
+        emprestimos: emprestimosData,
+        categorias: categoriasData
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = getChartData();
+    
+                // Gráfico de Requisições por Mês
+    const emprestimosCtx = document.getElementById('emprestimosChart').getContext('2d');
+    new Chart(emprestimosCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.emprestimos.labels || [],
+            datasets: [{
+                                        label: 'Requisições',
+                data: chartData.emprestimos.emprestimos || [],
+                borderColor: 'rgb(45, 80, 22)',
+                backgroundColor: 'rgba(45, 80, 22, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Devoluções',
+                data: chartData.emprestimos.devolucoes || [],
+                borderColor: 'rgb(34, 139, 34)',
+                backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Atrasos',
+                data: chartData.emprestimos.atrasos || [],
+                borderColor: 'rgb(220, 53, 69)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+
+    // Gráfico de Categorias
+    const categoriasCtx = document.getElementById('categoriasChart').getContext('2d');
+    if (chartData.categorias.labels && chartData.categorias.labels.length > 0) {
+        new Chart(categoriasCtx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.categorias.labels,
+                datasets: [{
+                    data: chartData.categorias.data,
+                    backgroundColor: [
+                        'rgb(45, 80, 22)',
+                        'rgb(212, 175, 55)',
+                        'rgb(139, 69, 19)',
+                        'rgb(34, 139, 34)',
+                        'rgb(184, 134, 11)',
+                        'rgb(102, 16, 242)',
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    } else {
+        // Mostrar mensagem quando não há dados
+        categoriasCtx.canvas.style.display = 'none';
+        const noDataMsg = document.createElement('div');
+        noDataMsg.className = 'text-center text-muted py-4';
+        noDataMsg.innerHTML = '<i class="fas fa-chart-pie fa-2x mb-2"></i><br>Sem dados para exibir';
+        categoriasCtx.canvas.parentNode.appendChild(noDataMsg);
+    }
+
+    // Auto-submit do formulário quando o período predefinido muda
+    const periodoSelect = document.getElementById('periodo');
+    if (periodoSelect) {
+        periodoSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.form.submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+
