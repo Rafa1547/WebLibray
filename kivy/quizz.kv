@@ -1,0 +1,44 @@
+<QuizLayout>:
+    orientation: "vertical"
+    padding: 20
+    spacing: 10
+    
+    Label:
+        text: "Pontuação: " + str(root.pontuacao)
+        font_size: 24
+        size_hint_y: None
+        height: "40dp"
+    
+    Label:
+        text: root.pergunta_text
+        font_size: 20
+        text_size: self.width, None
+        halign: "center"
+        valign: "middle"
+        size_hint_y: None
+        height: "100dp"
+    
+    Button:
+        id: resposta1
+        text: root.opcoes[0] if len(root.opcoes) > 0 else ""
+        disabled: len(root.opcoes) == 0
+        size_hint_y: None
+        height: "50dp"
+        on_release: root.responder(self.text) if self.text else None
+    
+    Button:
+        id: resposta2
+        text: root.opcoes[1] if len(root.opcoes) > 1 else ""
+        disabled: len(root.opcoes) < 2
+        size_hint_y: None
+        height: "50dp"
+        on_release: root.responder(self.text) if self.text else None
+    
+    Button:
+        id: resposta3
+        text: root.opcoes[2] if len(root.opcoes) > 2 else ""
+        disabled: len(root.opcoes) < 3
+        size_hint_y: None
+        height: "50dp"
+        on_release: root.responder(self.text) if self.text else None
+
